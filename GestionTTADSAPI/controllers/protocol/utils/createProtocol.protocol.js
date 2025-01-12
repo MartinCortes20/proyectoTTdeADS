@@ -75,17 +75,30 @@ const createProtocol = async (req = request, res = response) => {
     }
 
 
-     // Verificar si ya existe un protocolo con el mismo equipo, líder o título
-     const [protocolosExistentes] = await connection.query(
-        `SELECT * FROM Protocolos WHERE id_equipo = ? AND lider = ? AND titulo = ? AND estatus = 'A'`,
-        [equipo[0].id_equipo, lider_equipo, titulo_protocolo]
-      );
+     // Verificar si ya existe un protocolo con un título similar
+    const [protocolosExistentes] = await connection.query(
+      `SELECT * FROM Protocolos WHERE MATCH(titulo) AGAINST (? IN NATURAL LANGUAGE MODE) AND estatus = 'A'`,
+      [titulo_protocolo]
+    );
+
+    if (protocolosExistentes.length > 0) {
+      return res.status(400).json({
+        message: "Ya existe un protocolo con un título similar. No se puede crear el protocolo."
+      });
+    }
+
+    // Verificar si ya existe un protocolo con el mismo equipo, líder o título
+    const [protocolosExactos] = await connection.query(
+      `SELECT * FROM Protocolos WHERE id_equipo = ? AND lider = ? AND titulo = ? AND estatus = 'A'`,
+      [equipo[0].id_equipo, lider_equipo, titulo_protocolo]
+    );
   
-      if (protocolosExistentes.length > 0) {
-        return res.status(400).json({
-          message: "Ya existe un protocolo con el mismo equipo, líder o título. No se puede crear el protocolo."
-        });
-      }
+    if (protocolosExactos.length > 0) {
+      return res.status(400).json({
+        message: "Ya existe un protocolo con el mismo equipo, líder o título. No se puede crear el protocolo."
+      });
+    }
+
 
     // Crear el protocolo en la base de datos
     const [resultadoProtocolo] = await connection.query(

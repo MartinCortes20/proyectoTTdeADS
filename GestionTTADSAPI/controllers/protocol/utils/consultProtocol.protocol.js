@@ -40,26 +40,34 @@ const consultProtocol = async (req = request, res = response) => {
 
         // ** Construcción de la consulta**
         let query = `
+        SELECT 
+            p.lider,
+            p.titulo,
+            p.etapa,
+            p.academia,
+            p.director,
+            p.director_2,
+            p.sinodal_1,
+            p.sinodal_2,
+            p.sinodal_3,
+            p.calif_Sinodal1,
+            p.calif_Sinodal2,
+            p.calif_Sinodal3,
+            p.estado,
+            DATE_FORMAT(p.fecha_registro, '%d/%m/%Y') AS fecha_registro,
+            p.estatus,
+            p.pdf,
+            d.resultado AS dictamen
+        FROM Protocolos p
+        LEFT JOIN (
             SELECT 
-                p.id_protocolo,
-                p.id_equipo,
-                p.lider,
-                p.titulo,
-                p.etapa,
-                p.academia,
-                p.director,
-                p.director_2,
-                p.sinodal_1,
-                p.sinodal_2,
-                p.sinodal_3,
-                p.calif_Sinodal1,
-                p.calif_Sinodal2,
-                p.calif_Sinodal3,
-                p.estado,
-                p.fecha_registro,
-                p.estatus
-            FROM Protocolos p
-            WHERE 1=1
+                id_protocolo, 
+                MAX(id_dictamen) AS id_dictamen  -- Selecciona el dictamen más reciente
+            FROM Dictamen
+            GROUP BY id_protocolo
+        ) latest_dictamen ON latest_dictamen.id_protocolo = p.id_protocolo
+        LEFT JOIN Dictamen d ON d.id_dictamen = latest_dictamen.id_dictamen
+        WHERE 1=1
         `;
 
         const queryParams = [];
@@ -87,7 +95,7 @@ const consultProtocol = async (req = request, res = response) => {
         }
 
         if (fecha) {
-            const [mes, anio] = fecha.split('/');
+            const [anio, mes] = fecha.split('/');
             const fechaInicio = `${2000 + parseInt(anio)}-${mes}-01 00:00:00`;
             const fechaFin = `${2000 + parseInt(anio)}-${mes}-31 23:59:59`;
             query += " AND p.fecha_registro BETWEEN ? AND ?";
