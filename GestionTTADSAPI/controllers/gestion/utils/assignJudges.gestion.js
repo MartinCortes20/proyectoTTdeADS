@@ -110,6 +110,13 @@ const assignJudges = async (req = request, res = response) => {
             [sinodal1, sinodal2, sinodal3, protocoloId]
         );
 
+        await connection.query(
+            `UPDATE Equipos 
+             SET sinodal_1 = ?, sinodal_2 = ?, sinodal_3 = ? 
+             WHERE id_equipo = ?`, 
+            [sinodal1, sinodal2, sinodal3, idEquipo]
+        );
+
         await Promise.all(sinodalesAsignados.map(async (sinodal) => {
             try {
                 const [docente] = await connection.query(
