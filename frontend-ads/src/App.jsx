@@ -7,8 +7,9 @@ import TeamsPage from './pages/admin/TeamsPage';
 import AssignJudgesPage from './pages/admin/AssignJudgesPage';
 import EvaluationsPage from './pages/admin/EvaluationsPage';
 import DashboardStudent from './pages/student/DashboardStudent';
-import TeamFormPage from './pages/student/TeamFormPage';
+import TeamFormPage from './pages/student/CreateTeamFormPage';
 import AuthPage from './pages/AuthPage'; // Página que incluye login y register
+import ProtocolFormPage from './pages/student/CreateProtocolFormPage';
 
 const App = () => {
 	return (
@@ -51,12 +52,16 @@ const App = () => {
 
 								{/* Rutas para ESTUDIANTE */}
 								<Route
-									path="/student/dashboard"
+									path="/student"
 									element={<DashboardStudent />}
 								/>
 								<Route
 									path="/student/create-team"
 									element={<TeamFormPage />}
+								/>
+								<Route
+									path="/student/create-protocol"
+									element={<ProtocolFormPage />}
 								/>
 							</Routes>
 						</>

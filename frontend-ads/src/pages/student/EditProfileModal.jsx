@@ -59,6 +59,7 @@ const EditProfileModal = ({ userData }) => {
 				status: 'success',
 				duration: 5000,
 				isClosable: true,
+				position: 'top',
 			});
 			onClose();
 		} catch (error) {
@@ -69,6 +70,7 @@ const EditProfileModal = ({ userData }) => {
 				status: 'error',
 				duration: 5000,
 				isClosable: true,
+				position: 'top',
 			});
 		}
 	};
@@ -76,7 +78,7 @@ const EditProfileModal = ({ userData }) => {
 	return (
 		<>
 			<Button
-				colorScheme="blue"
+				colorScheme="yellow"
 				onClick={onOpen}
 			>
 				Editar Perfil

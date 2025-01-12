@@ -25,6 +25,7 @@ const UpdateProtocolModal = () => {
 			status: 'success',
 			duration: 5000,
 			isClosable: true,
+			position: 'top',
 		});
 		onClose();
 	};

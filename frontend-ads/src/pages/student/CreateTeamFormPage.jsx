@@ -1,3 +1,4 @@
+import React, { useState } from 'react';
 import {
 	Box,
 	Button,
@@ -12,22 +13,22 @@ import {
 	Divider,
 	Text,
 } from '@chakra-ui/react';
-import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { crearEquipo } from '../../api';
 
-const TeamFormPage = ({ onCreate }) => {
+const TeamFormPage = () => {
 	const [teamData, setTeamData] = useState({
 		nombre_equipo: '',
-		integrantes_boletas: [''], // Mínimo dos integrantes
+		titulo: '',
+		integrantes_boletas: [''],
 		lider: '',
-		titulo: '', // Agregado para `createProtocol`
-		academia: '', // Agregado para `createProtocol`
-		director: '', // Director principal
-		director_2: '', // Segundo director (opcional)
+		director: '',
+		director_2: '',
+		academia: '',
 	});
-
 	const toast = useToast();
+	const navigate = useNavigate();
 
-	// Manejo de cambios en los campos
 	const handleInputChange = (key, value) => {
 		setTeamData({ ...teamData, [key]: value });
 	};
@@ -55,29 +56,40 @@ const TeamFormPage = ({ onCreate }) => {
 		}
 	};
 
-	const handleSubmit = () => {
-		// Validar los campos antes de enviar
-		if (!teamData.nombre_equipo || !teamData.titulo || !teamData.academia) {
+	const handleSubmit = async () => {
+		try {
+			const token = localStorage.getItem('token');
+			const response = await crearEquipo(token, teamData);
+
+			if (response.success) {
+				toast({
+					title: 'Equipo creado',
+					description: `El equipo "${teamData.nombre_equipo}" se ha creado exitosamente.`,
+					status: 'success',
+					duration: 3000,
+					isClosable: true,
+				});
+				navigate('/student');
+			} else {
+				toast({
+					title: 'Error al crear equipo',
+					description: response.message || 'Ocurrió un error inesperado.',
+					status: 'error',
+					duration: 3000,
+					isClosable: true,
+				});
+			}
+		} catch (error) {
+			console.error('Error en la solicitud:', error);
 			toast({
-				title: 'Error',
-				description: 'Los campos obligatorios no pueden estar vacíos.',
+				title: 'Error interno del servidor',
+				description:
+					'No se pudo completar la solicitud. Intente nuevamente más tarde.',
 				status: 'error',
 				duration: 3000,
 				isClosable: true,
 			});
-			return;
 		}
-
-		// Enviar los datos al callback
-		onCreate(teamData);
-
-		toast({
-			title: 'Equipo y protocolo creados',
-			description: 'El equipo y el protocolo han sido creados exitosamente.',
-			status: 'success',
-			duration: 3000,
-			isClosable: true,
-		});
 	};
 
 	return (
@@ -94,7 +106,7 @@ const TeamFormPage = ({ onCreate }) => {
 					fontSize="3xl"
 					color="#2B6CB0"
 				>
-					Crear Equipo y Protocolo
+					Crear Equipo
 				</Heading>
 			</Flex>
 			<VStack
@@ -105,7 +117,6 @@ const TeamFormPage = ({ onCreate }) => {
 				borderRadius="md"
 				boxShadow="lg"
 			>
-				{/* Datos del Equipo */}
 				<Text
 					fontSize="xl"
 					fontWeight="bold"
@@ -126,6 +137,21 @@ const TeamFormPage = ({ onCreate }) => {
 						placeholder="Ingrese el nombre del equipo"
 						value={teamData.nombre_equipo}
 						onChange={(e) => handleInputChange('nombre_equipo', e.target.value)}
+						focusBorderColor="#2B6CB0"
+					/>
+				</FormControl>
+
+				<FormControl>
+					<FormLabel
+						fontWeight="bold"
+						color="#2B6CB0"
+					>
+						Título del Equipo
+					</FormLabel>
+					<Input
+						placeholder="Ingrese el título del equipo"
+						value={teamData.titulo}
+						onChange={(e) => handleInputChange('titulo', e.target.value)}
 						focusBorderColor="#2B6CB0"
 					/>
 				</FormControl>
@@ -180,32 +206,6 @@ const TeamFormPage = ({ onCreate }) => {
 					</Select>
 				</FormControl>
 
-				{/* Datos del Protocolo */}
-				<Text
-					fontSize="xl"
-					fontWeight="bold"
-					color="#2B6CB0"
-					mt={8}
-				>
-					Información del Protocolo
-				</Text>
-				<Divider mb={4} />
-
-				<FormControl>
-					<FormLabel
-						fontWeight="bold"
-						color="#2B6CB0"
-					>
-						Título del Protocolo
-					</FormLabel>
-					<Input
-						placeholder="Ingrese el título del protocolo"
-						value={teamData.titulo}
-						onChange={(e) => handleInputChange('titulo', e.target.value)}
-						focusBorderColor="#2B6CB0"
-					/>
-				</FormControl>
-
 				<FormControl>
 					<FormLabel
 						fontWeight="bold"
@@ -256,7 +256,7 @@ const TeamFormPage = ({ onCreate }) => {
 					size="lg"
 					onClick={handleSubmit}
 				>
-					Crear Equipo y Protocolo
+					Crear Equipo
 				</Button>
 			</VStack>
 		</Box>

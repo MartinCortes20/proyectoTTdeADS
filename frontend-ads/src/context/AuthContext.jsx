@@ -1,27 +1,38 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useState, useEffect } from 'react';
+import { cerrarSesion } from '../api';
 
-const AuthContext = createContext();
+export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-	const [user, setUser] = useState(null);
+	const [token, setToken] = useState(localStorage.getItem('log-token') || null);
 
-	const login = (userData) => {
-		setUser(userData);
-		localStorage.setItem('user', JSON.stringify(userData));
+	const login = (newToken) => {
+		setToken(newToken);
+		localStorage.setItem('log-token', newToken);
 	};
 
-	const logout = () => {
-		setUser(null);
-		localStorage.removeItem('user');
+	const logout = async () => {
+		try {
+			await cerrarSesion();
+		} catch (error) {
+			console.error('Error al cerrar sesión:', error);
+		}
+		setToken(null);
+		localStorage.removeItem('log-token');
 	};
 
-	const value = {
-		user,
-		login,
-		logout,
-	};
+	useEffect(() => {
+		const storedToken = localStorage.getItem('log-token');
+		if (storedToken) {
+			setToken(storedToken);
+		}
+	}, []);
 
-	return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+	console.log(token);
+
+	return (
+		<AuthContext.Provider value={{ token, login, logout }}>
+			{children}
+		</AuthContext.Provider>
+	);
 };
-
-export const useAuth = () => useContext(AuthContext);

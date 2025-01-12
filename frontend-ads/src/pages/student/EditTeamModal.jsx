@@ -54,6 +54,7 @@ const EditTeamModal = ({ teamData, onSave }) => {
 				status: 'warning',
 				duration: 3000,
 				isClosable: true,
+				position: 'top',
 			});
 		}
 	};
@@ -66,6 +67,7 @@ const EditTeamModal = ({ teamData, onSave }) => {
 			status: 'success',
 			duration: 5000,
 			isClosable: true,
+			position: 'top',
 		});
 		onClose();
 	};

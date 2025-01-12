@@ -24,6 +24,7 @@ const DeleteProfileButton = () => {
 			status: 'success',
 			duration: 5000,
 			isClosable: true,
+			position: 'top',
 		});
 
 		// Cerrar el modal

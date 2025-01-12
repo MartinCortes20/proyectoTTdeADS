@@ -1,7 +1,7 @@
 import React from 'react';
-import App from './App';
+import App from './App.jsx';
 import { ChakraProvider } from '@chakra-ui/react';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider } from './context/AuthContext.jsx';
 import { createRoot } from 'react-dom/client';
 
 const container = document.getElementById('root');
