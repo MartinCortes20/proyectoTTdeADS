@@ -32,7 +32,7 @@ const assignJudges = async (req = request, res = response) => {
         }
 
         const [protocolo] = await connection.query(
-            `SELECT p.* 
+            `SELECT p.*, e.id_equipo 
              FROM Protocolos p
              JOIN Equipos e ON e.id_protocolo = p.id_protocolo 
              WHERE UPPER(e.nombre_equipo) = ? 
@@ -46,11 +46,12 @@ const assignJudges = async (req = request, res = response) => {
         }
 
         const protocoloId = protocolo[0].id_protocolo;
+        const idEquipo = protocolo[0].id_equipo;
         const academiaProtocolo = protocolo[0].academia;
 
          // 🛑 Verificar si los sinodales ya están asignados
          const { sinodal_1, sinodal_2, sinodal_3 } = protocolo[0];
-         if (sinodal_1 !== 'SIN ASIGNAR' || sinodal_2 !== 'SIN ASIGNAR' || sinodal_3 !== 'SIN ASIGNAR') {
+         if (sinodal_1 !== 'POR DEFINIR' || sinodal_2 !== 'POR DEFINIR' || sinodal_3 !== 'POR DEFINIR') {
              return res.status(409).json({ message: "Ya se agregaron sinodales a este protocolo." });
          }
 
@@ -130,6 +131,14 @@ const assignJudges = async (req = request, res = response) => {
                     [protocoloId, idDocente, tituloProtocoloUpper]
                 );
 
+                 // Insertar también en la tabla Docente_Equipos
+                 await connection.query(
+                    `INSERT INTO Docente_Equipos (id_docente, id_equipo, nombre_equipo)
+                     VALUES (?, ?, ?) 
+                     ON DUPLICATE KEY UPDATE id_equipo = VALUES(id_equipo)`,
+                    [idDocente, idEquipo, equipoUpper]
+                );
+
             } catch (error) {
                 console.error(`Error asignando sinodal: ${error.message}`);
             }
@@ -142,6 +151,8 @@ const assignJudges = async (req = request, res = response) => {
              VALUES (?, ?, ?, ?)`,
             ['Protocolos', protocoloId, 'Asignación de sinodales', clave_empleado || boleta]
         );
+
+
 
         res.status(200).json({ 
             message: "Sinodales asignados con éxito.", 

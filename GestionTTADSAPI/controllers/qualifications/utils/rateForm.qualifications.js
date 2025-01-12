@@ -157,7 +157,16 @@ const rateForm = async (req = request, res = response) => {
                 resultadoDictamen = 'NO APROBADO';
             }
 
-            // Crear dictamen
+             // Crear dictamen
+             const [dictamenCount] = await connection.query(
+                `SELECT COUNT(*) AS attempts FROM Dictamen WHERE id_protocolo = ? AND resultado = 'NO APROBADO'`, 
+                [protocoloId]
+            );
+
+            if (dictamenCount[0].attempts >= 3 && resultadoDictamen === 'NO APROBADO') {
+                return res.status(403).json({ message: "Ya se pasaron los intentos de intentar aprobar, se procede a un dictamen de NO APROBADO." });
+            }
+
             await connection.query(
                 `INSERT INTO Dictamen (id_protocolo, id_equipo, resultado) 
                  VALUES (?, ?, ?)`, 
@@ -168,14 +177,16 @@ const rateForm = async (req = request, res = response) => {
             await connection.query(
                 `INSERT INTO ABC (tabla_afectada, id_registro, cambio_realizado, usuario) 
                  VALUES ('Dictamen', ?, ?, ?)`, 
-                [protocoloId, `Dictamen generado: ${resultadoDictamen}`, nombre_usuario]
+                [protocoloId, `Dictamen generado: ${resultadoDictamen}`, boleta]
             );
         }
         // console.log(protocoloId,boleta);
 
        // Generar PDF después de calificar
+       console.log("no llego a pdf");
        const pdfResponse = await generarPdfCalificacion(protocoloId, boleta);  // Generar el PDF
-
+       console.log("si genero pdf");
+       
        // Responder con el PDF o confirmación de éxito
        res.status(200).json({ 
            message: "Evaluación registrada con éxito y PDF generado.", 

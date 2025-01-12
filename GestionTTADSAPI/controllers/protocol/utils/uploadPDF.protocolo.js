@@ -56,15 +56,38 @@ const uploadPDF = async (req = request, res = response) => {
     const id_protocolo = protocolo[0].id_protocolo;
 
     // Comprobar si el usuario pertenece al equipo de este protocolo
-    if (permisosUsuario.includes('A')) {
-      const [alumno] = await connection.query(
-        `SELECT * FROM Alumnos 
-         WHERE boleta = ? AND id_protocolo = ? AND estado = 'A'`,
-        [usuarioBoleta, id_protocolo]
+    if (permisosUsuario.includes('A') || permisosUsuario.includes('G')) {
+      const [usuarioEquipo] = await connection.query(
+        `SELECT * FROM (
+          -- Consulta para los alumnos
+          SELECT boleta AS usuario, id_protocolo, 'alumno' AS tipo 
+          FROM Alumnos 
+          WHERE boleta = ? AND id_protocolo = ? AND estado = 'A'
+          
+          UNION
+          
+          -- Consulta para los docentes asociados al protocolo
+          SELECT d.clave_empleado AS usuario, dp.id_protocolo, 'docente' AS tipo
+          FROM Docente_Protocolo dp
+          JOIN Docentes d ON dp.id_docente = d.id_docente
+          WHERE dp.id_protocolo = ? AND d.estado = 'A' AND dp.estatus = 'A'
+          
+          UNION
+          
+          -- Si el permiso es 'G', el docente puede ser seleccionado sin estar asociado a un equipo
+          SELECT clave_empleado AS usuario, NULL AS id_protocolo, 'docente' AS tipo
+          FROM Docentes
+          WHERE clave_empleado = ? AND estado = 'A'
+        ) AS usuarios
+        WHERE usuario = ?`,
+        [usuarioBoleta, id_protocolo, id_protocolo, usuarioBoleta, usuarioBoleta]
       );
-
-      if (!alumno.length) {
-        return res.status(403).json({ message: "No tienes permiso para subir el PDF de este protocolo." });
+    
+      // Verificar si el usuario pertenece al equipo del protocolo
+      if (usuarioEquipo.length === 0) {
+        return res.status(404).json({
+          message: "El usuario no pertenece al equipo de este protocolo."
+        });
       }
     }
 

@@ -41,7 +41,6 @@ const consultTeam = async (req = request, res = response) => {
         // **3️⃣ Construcción de la consulta**
         let query = `
             SELECT 
-                e.id_equipo, 
                 e.nombre_equipo, 
                 e.titulo, 
                 e.lider, 
@@ -51,8 +50,8 @@ const consultTeam = async (req = request, res = response) => {
                 e.sinodal_2, 
                 e.sinodal_3, 
                 e.academia, 
-                e.fecha_registro, 
-                e.estado 
+                DATE_FORMAT(e.fecha_registro, '%d/%m/%Y') AS fecha_registro,
+                e.estado
             FROM Equipos e 
             WHERE 1=1
         `;
@@ -82,10 +81,11 @@ const consultTeam = async (req = request, res = response) => {
         }
 
         if (fecha) {
-            const [mes, anio] = fecha.split('/');
+            const [anio, mes] = fecha.split('/');
             const fechaInicio = `${2000 + parseInt(anio)}-${mes}-01 00:00:00`;
             const fechaFin = `${2000 + parseInt(anio)}-${mes}-31 23:59:59`;
             query += " AND e.fecha_registro BETWEEN ? AND ?";
+            console.log(queryParams);
             queryParams.push(fechaInicio, fechaFin);
         }
 
@@ -98,7 +98,8 @@ const consultTeam = async (req = request, res = response) => {
         // Filtro por título de protocolo
         if (titulo_protocolo) {
             query += " AND e.titulo LIKE ?";
-            queryParams.push(`%${titulo_protocolo}%`);
+            console.log(queryParams);
+            queryParams.push(titulo_protocolo);
         }
 
         console.log("Consulta:", query);
