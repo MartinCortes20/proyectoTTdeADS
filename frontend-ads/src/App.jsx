@@ -63,6 +63,20 @@ const App = () => {
 									path="/student/create-protocol"
 									element={<ProtocolFormPage />}
 								/>
+
+								{/* Rutas para CATT */}
+								<Route
+									path="/catt"
+									element={<DashboardCatt/>}
+								/>
+								
+								{/* Rutas para PRESIDENTE */}
+								<Route
+									path="/president"
+									element={<DashboardPresident/>}
+								/>
+								
+								
 							</Routes>
 						</>
 					}

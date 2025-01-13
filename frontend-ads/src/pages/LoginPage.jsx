@@ -64,6 +64,12 @@ const Login = () => {
 					case 'ESTUDIANTE':
 						navigate('/student');
 						break;
+					case 'CATT':
+						navigate('/catt');
+						break;	
+					case 'PRESIDENTE':
+						navigate('/president');
+						break;	
 					default:
 						navigate('/');
 						break;
