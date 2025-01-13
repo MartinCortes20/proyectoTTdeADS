@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { jwtDecode } from 'jwt-decode';
 
 const BASE_URL = 'http://localhost:8080/api/gestionTT';
 
@@ -36,6 +37,20 @@ const handleRequestError = (error, defaultMessage) => {
 };
 
 // Usuarios
+/**
+ * Decodificar token JWT.
+ * @param {string} token - Token JWT.
+ * @returns {Object} Información del usuario.
+ */
+const decodificarToken = (token) => {
+	try {
+		return jwtDecode(token);
+	} catch (error) {
+		console.error('Error al decodificar el token:', error);
+		return null;
+	}
+};
+
 /**
  * Crear un estudiante.
  * @param {string} nombre - Nombre del estudiante.
@@ -97,7 +112,7 @@ export const crearMaestro = async (
  * Iniciar sesión.
  * @param {string} correo - Correo del usuario.
  * @param {string} contrasena - Contraseña del usuario.
- * @returns {Promise<Object>} Token de autenticación.
+ * @returns {Promise<Object>} Token de autenticación y datos del usuario.
  */
 export const iniciarSesion = async (correo, contrasena) => {
 	try {
@@ -105,8 +120,13 @@ export const iniciarSesion = async (correo, contrasena) => {
 			correo,
 			contrasena,
 		});
-		console.log('Token recibido:', response.data.token);
-		return { success: true, token: response.data.token };
+		// console.log('Token recibido:', response.data.token);
+
+		// Decodificar el token para obtener información del usuario
+		const usuario = decodificarToken(response.data.token);
+		// console.log('Información del usuario:', usuario);
+
+		return { success: true, token: response.data.token, usuario };
 	} catch (error) {
 		return handleRequestError(error, 'Error al iniciar sesión.');
 	}
@@ -143,6 +163,11 @@ export const consultarUsuarios = async (token, filtros = {}) => {
 			}
 		);
 		console.log('Usuarios encontrados:', response.data);
+
+		// Decodificar token para extraer información adicional si es necesario
+		const usuarioAutenticado = decodificarToken(token);
+		console.log('Usuario autenticado:', usuarioAutenticado);
+
 		return { success: true, data: response.data.usuarios };
 	} catch (error) {
 		return handleRequestError(error, 'Error al consultar usuarios.');

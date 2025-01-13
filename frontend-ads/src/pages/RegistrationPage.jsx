@@ -9,8 +9,8 @@ import {
 	useToast,
 	Select,
 } from '@chakra-ui/react';
-import { useNavigate } from 'react-router-dom'; // Importar useNavigate
-import { crearEstudiante, crearMaestro } from '../api';
+import { useNavigate } from 'react-router-dom';
+import { crearEstudiante, crearMaestro, iniciarSesion } from '../api';
 
 const Register = () => {
 	const [formData, setFormData] = useState({
@@ -38,7 +38,7 @@ const Register = () => {
 	];
 
 	const toast = useToast();
-	const navigate = useNavigate(); // Hook para redirecciones
+	const navigate = useNavigate();
 
 	const handleChange = (e) => {
 		setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -78,6 +78,7 @@ const Register = () => {
 					position: 'top',
 				});
 			} else {
+				// Mostrar mensaje de éxito
 				toast({
 					title: 'Registro exitoso.',
 					description: response.message || '¡Usuario creado correctamente!',
@@ -87,11 +88,42 @@ const Register = () => {
 					position: 'top',
 				});
 
-				// Redirigir dependiendo del rol
-				if (formData.rol === 'ESTUDIANTE') {
-					navigate('/student');
-				} else if (formData.rol === 'DOCENTE') {
-					navigate('/teacher');
+				// Iniciar sesión automáticamente
+				try {
+					const loginResponse = await iniciarSesion(
+						formData.correo,
+						formData.contrasena
+					);
+
+					if (loginResponse.success) {
+						// Guardar el token en localStorage
+						localStorage.setItem('log-token', loginResponse.token);
+
+						// Redirigir según el rol
+						if (formData.rol === 'ESTUDIANTE') {
+							navigate('/student');
+						} else if (formData.rol === 'DOCENTE') {
+							navigate('/teacher');
+						}
+					} else {
+						toast({
+							title: 'Error al iniciar sesión.',
+							description: loginResponse.message,
+							status: 'error',
+							duration: 3000,
+							isClosable: true,
+							position: 'top',
+						});
+					}
+				} catch (error) {
+					toast({
+						title: 'Error inesperado.',
+						description: 'No se pudo iniciar sesión automáticamente.',
+						status: 'error',
+						duration: 3000,
+						isClosable: true,
+						position: 'top',
+					});
 				}
 			}
 		} catch (error) {

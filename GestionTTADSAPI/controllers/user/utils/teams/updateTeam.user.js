@@ -184,7 +184,7 @@ const updateTeam = async (req = request, res = response) => {
 			// Registrar el cambio en la tabla ABC
 			const cambio = `Se actualizó el equipo ${nombre_equipo}.`;
 			await connection.query(
-				'INSERT INTO AB C (tabla_afectada, id_registro, cambio_realizado, usuario) VALUES (?, ?, ?, ?)',
+				'INSERT INTO ABC (tabla_afectada, id_registro, cambio_realizado, usuario) VALUES (?, ?, ?, ?)',
 				['Equipos', equipo[0].id_equipo, cambio, lider]
 			);
 

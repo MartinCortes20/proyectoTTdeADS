@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import {
 	Box,
 	Flex,
@@ -22,7 +22,7 @@ import {
 } from '@chakra-ui/react';
 import { HamburgerIcon } from '@chakra-ui/icons';
 import { useNavigate } from 'react-router-dom';
-import { cerrarSesion } from '../api';
+import { AuthContext } from '../context/AuthContext'; // Importa el AuthContext
 
 const Navbar = () => {
 	const navigate = useNavigate();
@@ -30,10 +30,11 @@ const Navbar = () => {
 	const { isOpen, onOpen, onClose } = useDisclosure(); // Manejo del modal
 	const cancelRef = React.useRef(); // Referencia al botón de cancelar en el modal
 	const toast = useToast(); // Hook para manejar el toast
+	const { logout } = useContext(AuthContext); // Obtén el método `login` del contexto
 
 	// Función para confirmar el cierre de sesión
 	const handleLogoutConfirm = () => {
-		cerrarSesion(); // Eliminar el token o realizar operaciones necesarias
+		logout(); // Eliminar el token o realizar operaciones necesarias
 		navigate('/'); // Redirigir al usuario a la página de inicio de sesión
 		onClose(); // Cerrar el modal
 

@@ -9,15 +9,16 @@ import {
 	Flex,
 	Button,
 } from '@chakra-ui/react';
+import React, { useEffect, useState } from 'react';
 import EditProfileModal from './EditProfileModal';
 import DeleteProfileButton from './DeleteProfileButton';
-import React, { useEffect, useState } from 'react';
 import DeleteTeamButton from './DeleteTeamButton';
 import EditTeamModal from './EditTeamModal';
 import UpdateProtocolModal from './UpdateProtocolModal';
 import EditProtocolModal from './EditProtocolModal';
 import DeleteProtocolButton from './DeleteProtocolButton';
 import { consultarEquipos, consultarUsuarios } from '../../api';
+import { jwtDecode } from 'jwt-decode';
 
 const DashboardStudent = () => {
 	const [token, setToken] = useState('');
@@ -26,25 +27,26 @@ const DashboardStudent = () => {
 
 	useEffect(() => {
 		// Obtener el token desde el localStorage
-		const storedToken = localStorage.getItem('token');
+		const storedToken = localStorage.getItem('log-token');
 		setToken(storedToken);
-		// console.log(storedToken);
-		// Realizar una solicitud para obtener el equipo si el token está presente
-		if (storedToken) {
-			// consultarEquipos(storedToken, {}).then((response) => {
-			// 	if (response.success) {
-			// 		// Si encuentra equipo, lo guarda
-			// 		setMiEquipo(response.data[0]);
-			// 	} else {
-			// 		// Si no encuentra equipo, lo deja como null
-			// 		setMiEquipo(null);
-			// 	}
-			// });
 
-			// Realizar una solicitud para obtener la información del usuario
-			consultarUsuarios(storedToken, {}).then((response) => {
+		if (storedToken) {
+			// Decodificar el token para obtener la boleta
+			const payload = jwtDecode(storedToken);
+			const { boleta } = payload;
+
+			// Obtener la información del equipo
+			consultarEquipos(storedToken, {}).then((response) => {
 				if (response.success) {
-					console.log('Respuesta:', response);
+					setMiEquipo(response.data[0]);
+				} else {
+					setMiEquipo(null);
+				}
+			});
+
+			// Obtener la información del usuario
+			consultarUsuarios(storedToken, { boleta }).then((response) => {
+				if (response.success) {
 					setPerfilUsuario(response.data[0]);
 				} else {
 					setPerfilUsuario(null);
@@ -124,7 +126,8 @@ const DashboardStudent = () => {
 									mt={4}
 									justify="space-between"
 								>
-									<EditTeamModal />
+									{/* Pasar la información del equipo al modal */}
+									<EditTeamModal teamData={miEquipo} />
 									<DeleteTeamButton />
 								</Flex>
 							</>
@@ -153,7 +156,7 @@ const DashboardStudent = () => {
 								<Text fontWeight="bold">Nombre:</Text>
 								<Text mb={2}>{perfilUsuario.nombre}</Text>
 
-								<Text fontWeight="bold">Boleta/Clave:</Text>
+								<Text fontWeight="bold">Boleta:</Text>
 								<Text mb={2}>
 									{perfilUsuario.boleta || perfilUsuario.clave_empleado}
 								</Text>
@@ -183,7 +186,6 @@ const DashboardStudent = () => {
 						</Flex>
 					</CardBody>
 				</Card>
-
 				{/* Información del Protocolo */}
 				<Card
 					boxShadow="lg"
@@ -231,14 +233,20 @@ const DashboardStudent = () => {
 						Sinodales Asignados
 					</CardHeader>
 					<CardBody p={4}>
-						<Text fontWeight="bold">Sinodal 1:</Text>
-						<Text mb={2}>Patricia</Text>
+						{miEquipo ? (
+							<>
+								<Text fontWeight="bold">Sinodal 1:</Text>
+								<Text mb={2}>{miEquipo.sinodal_1 || 'Pendiente'}</Text>
 
-						<Text fontWeight="bold">Sinodal 2:</Text>
-						<Text mb={2}>Denisse</Text>
+								<Text fontWeight="bold">Sinodal 2:</Text>
+								<Text mb={2}>{miEquipo.sinodal_2 || 'Pendiente'}</Text>
 
-						<Text fontWeight="bold">Sinodal 3:</Text>
-						<Text>Fernanda</Text>
+								<Text fontWeight="bold">Sinodal 3:</Text>
+								<Text>{miEquipo.sinodal_3 || 'Pendiente'}</Text>
+							</>
+						) : (
+							<Text>No hay sinodales asignados actualmente.</Text>
+						)}
 					</CardBody>
 				</Card>
 

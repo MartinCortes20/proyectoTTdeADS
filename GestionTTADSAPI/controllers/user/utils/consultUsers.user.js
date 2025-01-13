@@ -6,9 +6,9 @@ const consultUsers = async (req = request, res = response) => {
 	const { rol: userRole, correo: userCorreo } = req; // Rol y correo del usuario autenticado
 
 	try {
-		console.log(userRole);
+		console.log('Rol:', userRole);
 
-		console.log(rolSolicitado);
+		console.log('Rol solicitado:', rolSolicitado);
 		// Verificar permisos del usuario autenticado
 		const pool = await getConnection();
 		const [rolePermissions] = await pool.execute(
@@ -33,11 +33,9 @@ const consultUsers = async (req = request, res = response) => {
 			!puedeConsultarDocentes &&
 			!puedeConsultarTodos
 		) {
-			return res
-				.status(403)
-				.json({
-					message: 'No tienes permisos válidos para consultar usuarios.',
-				});
+			return res.status(403).json({
+				message: 'No tienes permisos válidos para consultar usuarios.',
+			});
 		}
 
 		let query = '';
@@ -146,12 +144,10 @@ const consultUsers = async (req = request, res = response) => {
 				queryParams.push(fechaInicio, fechaFin);
 			}
 		} else {
-			return res
-				.status(400)
-				.json({
-					message:
-						'No se detectaron parámetros válidos para tu consulta, recuerda que solo puedes bucar por boleta o clave de empleado.',
-				});
+			return res.status(400).json({
+				message:
+					'No se detectaron parámetros válidos para tu consulta, recuerda que solo puedes buscar por boleta o clave de empleado.',
+			});
 		}
 
 		// Ejecutar consulta

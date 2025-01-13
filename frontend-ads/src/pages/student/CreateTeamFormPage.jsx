@@ -58,7 +58,7 @@ const TeamFormPage = () => {
 
 	const handleSubmit = async () => {
 		try {
-			const token = localStorage.getItem('token');
+			const token = localStorage.getItem('log-token');
 			const response = await crearEquipo(token, teamData);
 
 			if (response.success) {

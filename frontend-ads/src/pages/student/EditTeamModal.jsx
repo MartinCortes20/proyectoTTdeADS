@@ -14,62 +14,113 @@ import {
 	useToast,
 	VStack,
 } from '@chakra-ui/react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { actualizarEquipo } from '../../api'; // Función de API para actualizar el equipo
+import { jwtDecode } from 'jwt-decode';
 
-const EditTeamModal = ({ teamData, onSave }) => {
+const EditTeamModal = ({ teamData }) => {
 	const { isOpen, onOpen, onClose } = useDisclosure();
 	const toast = useToast();
 
 	// Estado para manejar los datos del equipo
 	const [formData, setFormData] = useState({
-		nombre_equipo: teamData?.nombre_equipo || '',
-		titulo: teamData?.titulo || '',
-		director: teamData?.director || '',
-		director_2: teamData?.director_2 || '',
-		academia: teamData?.academia || '',
-		integrantes_boletas: teamData?.integrantes_boletas || [''], // Mínimo dos integrantes
-		lider: teamData?.lider || '',
+		nombre_equipo: '',
+		titulo: '',
+		director: '',
+		director_2: '',
+		area: '',
+		contrasena: '', // Nueva propiedad para la contraseña
 	});
 
+	// Cargar datos del equipo al abrir el modal
+	useEffect(() => {
+		if (isOpen) {
+			setFormData({
+				nombre_equipo: teamData?.nombre_equipo || '',
+				titulo: teamData?.titulo || '',
+				director: teamData?.director || '',
+				director_2: teamData?.director_2 || '',
+				area: teamData?.area || '',
+				contrasena: '', // Inicializar la contraseña vacía
+			});
+		}
+	}, [isOpen, teamData]);
+
+	// Manejar cambios en los campos del formulario
 	const handleInputChange = (key, value) => {
 		setFormData({ ...formData, [key]: value });
 	};
 
-	const handleMemberChange = (index, value) => {
-		const updatedMembers = [...formData.integrantes_boletas];
-		updatedMembers[index] = value;
-		setFormData({ ...formData, integrantes_boletas: updatedMembers });
-	};
-
-	const handleAddMember = () => {
-		if (formData.integrantes_boletas.length < 5) {
-			setFormData({
-				...formData,
-				integrantes_boletas: [...formData.integrantes_boletas, ''],
-			});
-		} else {
+	// Función para guardar cambios
+	const handleSave = async () => {
+		// Obtener el token desde localStorage
+		const token = localStorage.getItem('log-token');
+		if (!token) {
 			toast({
-				title: 'Máximo alcanzado.',
-				description: 'Solo se permiten hasta 5 miembros en el equipo.',
-				status: 'warning',
-				duration: 3000,
+				title: 'Error',
+				description: 'No se encontró el token de autenticación.',
+				status: 'error',
+				duration: 5000,
+				isClosable: true,
+				position: 'top',
+			});
+			return;
+		}
+
+		// Validar que la contraseña no esté vacía
+		if (!formData.contrasena) {
+			toast({
+				title: 'Error',
+				description: 'La contraseña es obligatoria para actualizar el equipo.',
+				status: 'error',
+				duration: 5000,
+				isClosable: true,
+				position: 'top',
+			});
+			return;
+		}
+		try {
+			// Preparar los datos para enviar al backend
+			const dataToSend = {
+				...formData,
+			};
+			console.log(dataToSend);
+
+			// Llamar a la función de API para actualizar el equipo
+			const response = await actualizarEquipo(token, dataToSend);
+
+			if (response.success) {
+				toast({
+					title: 'Equipo actualizado.',
+					description:
+						response.message || 'El equipo ha sido actualizado correctamente.',
+					status: 'success',
+					duration: 5000,
+					isClosable: true,
+					position: 'top',
+				});
+				onClose(); // Cerrar el modal
+				window.location.reload(); // Recargar la página para ver los cambios
+			} else {
+				toast({
+					title: 'Error al actualizar.',
+					description: response.message || 'Ocurrió un error inesperado.',
+					status: 'error',
+					duration: 5000,
+					isClosable: true,
+					position: 'top',
+				});
+			}
+		} catch (error) {
+			toast({
+				title: 'Error del servidor.',
+				description: 'No se pudo actualizar el equipo.',
+				status: 'error',
+				duration: 5000,
 				isClosable: true,
 				position: 'top',
 			});
 		}
-	};
-
-	const handleSave = () => {
-		onSave(formData); // Callback para guardar los cambios
-		toast({
-			title: 'Equipo actualizado.',
-			description: 'La información del equipo ha sido guardada exitosamente.',
-			status: 'success',
-			duration: 5000,
-			isClosable: true,
-			position: 'top',
-		});
-		onClose();
 	};
 
 	return (
@@ -135,41 +186,24 @@ const EditTeamModal = ({ teamData, onSave }) => {
 							</FormControl>
 
 							<FormControl>
-								<FormLabel>Miembros del Equipo</FormLabel>
-								{formData.integrantes_boletas.map((member, index) => (
-									<Input
-										key={index}
-										placeholder={`Boleta Miembro ${index + 1}`}
-										value={member}
-										onChange={(e) => handleMemberChange(index, e.target.value)}
-										mb={2}
-									/>
-								))}
-								<Button
-									onClick={handleAddMember}
-									colorScheme="blue"
-									mt={2}
-								>
-									Añadir Miembro
-								</Button>
+								<FormLabel>Área/Academia</FormLabel>
+								<Input
+									placeholder="Nueva área"
+									value={formData.area}
+									onChange={(e) => handleInputChange('area', e.target.value)}
+								/>
 							</FormControl>
 
 							<FormControl>
-								<FormLabel>Líder del Equipo</FormLabel>
-								<Select
-									placeholder="Seleccione al líder"
-									value={formData.lider}
-									onChange={(e) => handleInputChange('lider', e.target.value)}
-								>
-									{formData.integrantes_boletas.map((member, index) => (
-										<option
-											key={index}
-											value={member}
-										>
-											{member || `Boleta Miembro ${index + 1}`}
-										</option>
-									))}
-								</Select>
+								<FormLabel>Contraseña</FormLabel>
+								<Input
+									type="password"
+									placeholder="Tu contraseña para confirmar"
+									value={formData.contrasena}
+									onChange={(e) =>
+										handleInputChange('contrasena', e.target.value)
+									}
+								/>
 							</FormControl>
 						</VStack>
 					</ModalBody>
