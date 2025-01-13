@@ -7,7 +7,16 @@ import {
 	Text,
 	Heading,
 	Flex,
-	Button,
+	StepIcon,
+	StepNumber,
+	Stepper,
+	Step,
+	StepIndicator,
+	StepStatus,
+	StepTitle,
+	StepDescription,
+	StepSeparator,
+	useSteps,
 } from '@chakra-ui/react';
 import React, { useEffect, useState } from 'react';
 import EditProfileModal from './EditProfileModal';
@@ -17,44 +26,105 @@ import EditTeamModal from './EditTeamModal';
 import UpdateProtocolModal from './UpdateProtocolModal';
 import EditProtocolModal from './EditProtocolModal';
 import DeleteProtocolButton from './DeleteProtocolButton';
-import { consultarEquipos, consultarUsuarios } from '../../api';
+import {
+	consultarEquipos,
+	consultarUsuarios,
+	consultarProtocolos,
+} from '../../api';
 import { jwtDecode } from 'jwt-decode';
 
 const DashboardStudent = () => {
-	const [token, setToken] = useState('');
+	const { activeStep, setActiveStep } = useSteps({ index: 0 });
 	const [miEquipo, setMiEquipo] = useState(null);
 	const [perfilUsuario, setPerfilUsuario] = useState(null);
+	const [miProtocolo, setMiProtocolo] = useState(null);
+
+	const steps = [
+		{
+			title: 'Perfil Completado',
+			description: 'Información del perfil cargada',
+		},
+		{ title: 'Equipo Creado', description: 'Equipo registrado y asignado' },
+		{
+			title: 'Protocolo Registrado',
+			description: 'Protocolo creado y asignado',
+		},
+		{
+			title: 'Subir PDF de Protocolo',
+			description: 'PDF Protocolo asignado',
+		},
+	];
 
 	useEffect(() => {
-		// Obtener el token desde el localStorage
-		const storedToken = localStorage.getItem('log-token');
-		setToken(storedToken);
+		const fetchData = async () => {
+			try {
+				// Obtener el token desde el localStorage
+				const storedToken = localStorage.getItem('log-token');
+				if (!storedToken) {
+					console.error('Token no encontrado.');
+					return;
+				}
 
-		if (storedToken) {
-			// Decodificar el token para obtener la boleta
-			const payload = jwtDecode(storedToken);
-			const { boleta } = payload;
+				// Decodificar el token para obtener la boleta
+				const payload = jwtDecode(storedToken);
+				const { boleta } = payload;
 
-			// Obtener la información del equipo
-			consultarEquipos(storedToken, {}).then((response) => {
-				if (response.success) {
-					setMiEquipo(response.data[0]);
+				// Consultar equipos
+				const equiposResponse = await consultarEquipos(storedToken, {});
+				if (equiposResponse.success) {
+					setMiEquipo(equiposResponse.data[0]);
 				} else {
+					console.error('Error al consultar equipos:', equiposResponse.message);
 					setMiEquipo(null);
 				}
-			});
 
-			// Obtener la información del usuario
-			consultarUsuarios(storedToken, { boleta }).then((response) => {
-				if (response.success) {
-					setPerfilUsuario(response.data[0]);
+				// Consultar usuario
+				const usuariosResponse = await consultarUsuarios(storedToken, {
+					boleta,
+				});
+				if (usuariosResponse.success) {
+					setPerfilUsuario(usuariosResponse.data[0]);
 				} else {
+					console.error(
+						'Error al consultar usuarios:',
+						usuariosResponse.message
+					);
 					setPerfilUsuario(null);
 				}
-			});
-		}
+
+				// Consultar protocolos
+				const protocolosResponse = await consultarProtocolos(storedToken, {
+					boleta,
+				});
+				if (protocolosResponse.success) {
+					setMiProtocolo(protocolosResponse.data[0]);
+				} else {
+					console.error(
+						'Error al consultar protocolos:',
+						protocolosResponse.message
+					);
+					setMiProtocolo(null);
+				}
+			} catch (error) {
+				console.error('Error en fetchData:', error);
+			}
+		};
+
+		fetchData();
 	}, []);
 
+	useEffect(() => {
+		// Actualizar el Stepper dinámicamente
+		if (perfilUsuario) {
+			setActiveStep(1);
+		}
+		if (miEquipo) {
+			setActiveStep(2);
+		}
+		if (miProtocolo) {
+			setActiveStep(3);
+		}
+	}, [perfilUsuario, miEquipo, miProtocolo, setActiveStep]);
 	return (
 		<Box
 			bg="#EDF2F7"
@@ -72,6 +142,38 @@ const DashboardStudent = () => {
 					Panel de Estudiante
 				</Heading>
 			</Flex>
+
+			{/* Stepper */}
+			<Box mb={8}>
+				<Stepper
+					index={activeStep}
+					colorScheme="blue"
+					size="lg"
+					gap="0"
+					my="8"
+				>
+					{steps.map((step, index) => (
+						<Step key={index}>
+							<StepIndicator>
+								<StepStatus
+									complete={<StepIcon />}
+									incomplete={<StepNumber />}
+									active={<StepNumber />}
+								/>
+							</StepIndicator>
+
+							<Box ml={4}>
+								<StepTitle>{step.title}</StepTitle>
+								<StepDescription>{step.description}</StepDescription>
+							</Box>
+
+							{index < steps.length - 1 && <StepSeparator />}
+						</Step>
+					))}
+				</Stepper>
+			</Box>
+
+			{/* Información principal */}
 			<Grid
 				templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)' }}
 				gap={6}
@@ -98,20 +200,6 @@ const DashboardStudent = () => {
 								<Text fontWeight="bold">Título:</Text>
 								<Text mb={2}>{miEquipo.titulo}</Text>
 
-								<Text fontWeight="bold">Director:</Text>
-								<Text mb={2}>{miEquipo.director}</Text>
-
-								<Text fontWeight="bold">Director 2:</Text>
-								<Text mb={2}>{miEquipo.director_2}</Text>
-
-								<Text fontWeight="bold">PDF Subido:</Text>
-								<Text
-									color={miEquipo.pdf ? '#38A169' : '#E53E3E'}
-									fontWeight="bold"
-								>
-									{miEquipo.pdf ? 'Sí' : 'No'}
-								</Text>
-
 								<Text fontWeight="bold">Líder:</Text>
 								<Text mb={2}>{miEquipo.lider}</Text>
 
@@ -126,7 +214,6 @@ const DashboardStudent = () => {
 									mt={4}
 									justify="space-between"
 								>
-									{/* Pasar la información del equipo al modal */}
 									<EditTeamModal teamData={miEquipo} />
 									<DeleteTeamButton />
 								</Flex>
@@ -157,9 +244,7 @@ const DashboardStudent = () => {
 								<Text mb={2}>{perfilUsuario.nombre}</Text>
 
 								<Text fontWeight="bold">Boleta:</Text>
-								<Text mb={2}>
-									{perfilUsuario.boleta || perfilUsuario.clave_empleado}
-								</Text>
+								<Text mb={2}>{perfilUsuario.boleta}</Text>
 
 								<Text fontWeight="bold">Correo:</Text>
 								<Text mb={2}>{perfilUsuario.correo}</Text>
@@ -200,22 +285,39 @@ const DashboardStudent = () => {
 						Información del Protocolo
 					</CardHeader>
 					<CardBody p={4}>
-						<Text fontWeight="bold">Líder del Equipo:</Text>
-						<Text mb={2}>2025033811</Text>
+						{miProtocolo ? (
+							<>
+								<Text fontWeight="bold">Título del Protocolo:</Text>
+								<Text mb={2}>{miProtocolo.titulo}</Text>
 
-						<Text fontWeight="bold">Título del Protocolo:</Text>
-						<Text mb={2}>Real Madrid</Text>
+								<Text fontWeight="bold">Academia:</Text>
+								<Text mb={2}>{miProtocolo.academia}</Text>
 
-						<Text fontWeight="bold">Academia:</Text>
-						<Text mb={2}>ISC</Text>
+								<Text fontWeight="bold">Director:</Text>
+								<Text mb={2}>{miProtocolo.director}</Text>
 
-						<Flex
-							mt={4}
-							justify="space-between"
-						>
-							<EditProtocolModal />
-							<DeleteProtocolButton />
-						</Flex>
+								<Text fontWeight="bold">Director 2:</Text>
+								<Text mb={2}>{miProtocolo.director_2 || 'N/E'}</Text>
+
+								<Text fontWeight="bold">PDF Subido:</Text>
+								<Text
+									color={miEquipo.pdf ? '#38A169' : '#E53E3E'}
+									fontWeight="bold"
+								>
+									{miEquipo.pdf ? 'Sí' : 'No'}
+								</Text>
+
+								<Flex
+									mt={4}
+									justify="space-between"
+								>
+									<EditProtocolModal protocolData={miProtocolo} />
+									<DeleteProtocolButton />
+								</Flex>
+							</>
+						) : (
+							<Text>No tienes un protocolo registrado actualmente.</Text>
+						)}
 					</CardBody>
 				</Card>
 
@@ -233,20 +335,14 @@ const DashboardStudent = () => {
 						Sinodales Asignados
 					</CardHeader>
 					<CardBody p={4}>
-						{miEquipo ? (
-							<>
-								<Text fontWeight="bold">Sinodal 1:</Text>
-								<Text mb={2}>{miEquipo.sinodal_1 || 'Pendiente'}</Text>
+						<Text fontWeight="bold">Sinodal 1:</Text>
+						<Text mb={2}>{miEquipo?.sinodal_1 || 'Pendiente'}</Text>
 
-								<Text fontWeight="bold">Sinodal 2:</Text>
-								<Text mb={2}>{miEquipo.sinodal_2 || 'Pendiente'}</Text>
+						<Text fontWeight="bold">Sinodal 2:</Text>
+						<Text mb={2}>{miEquipo?.sinodal_2 || 'Pendiente'}</Text>
 
-								<Text fontWeight="bold">Sinodal 3:</Text>
-								<Text>{miEquipo.sinodal_3 || 'Pendiente'}</Text>
-							</>
-						) : (
-							<Text>No hay sinodales asignados actualmente.</Text>
-						)}
+						<Text fontWeight="bold">Sinodal 3:</Text>
+						<Text>{miEquipo?.sinodal_3 || 'Pendiente'}</Text>
 					</CardBody>
 				</Card>
 

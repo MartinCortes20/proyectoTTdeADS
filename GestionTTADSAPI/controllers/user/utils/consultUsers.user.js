@@ -48,7 +48,7 @@ const consultUsers = async (req = request, res = response) => {
 		if (puedeConsultarAlumnos && boleta) {
 			console.log('Permiso 4 detectado. Consultando alumnos por boleta...');
 			query = `
-                SELECT 'Alumno' AS tipo, a.boleta, a.nombre, a.correo, e.nombre_equipo, p.titulo AS nombre_protocolo, a.estado
+                SELECT 'Alumno' AS tipo, a.id_equipo, a.id_protocolo, a.boleta, a.nombre, a.correo, e.nombre_equipo, p.titulo AS nombre_protocolo, a.estado
                 FROM Alumnos a 
                 LEFT JOIN Equipos e ON a.id_equipo = e.id_equipo 
                 LEFT JOIN Protocolos p ON a.id_protocolo = p.id_protocolo
@@ -73,6 +73,8 @@ const consultUsers = async (req = request, res = response) => {
 
 			query = `
                 SELECT 'Alumno' AS tipo, 
+					   u.id_equipo,
+					   u.id_protocolo,
                        u.nombre AS nombre_usuario, 
                        u.correo AS correo_usuario, 
                        u.boleta AS identificador, 

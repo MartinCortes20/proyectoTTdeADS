@@ -14,40 +14,75 @@ import {
 	VStack,
 } from '@chakra-ui/react';
 import { useState } from 'react';
+import { actualizarProtocolo } from '../../api';
 
-const EditProtocolModal = ({ protocolData, onSave }) => {
+const EditProtocolModal = ({ protocolData }) => {
 	const { isOpen, onOpen, onClose } = useDisclosure();
 	const toast = useToast();
 
 	// Estado para manejar los datos del protocolo
 	const [formData, setFormData] = useState({
 		titulo: protocolData?.titulo || '',
-		director: protocolData?.director || '',
-		director_2: protocolData?.director_2 || '',
-		academia: protocolData?.academia || '',
-		pdf: protocolData?.pdf || null,
+		lider: protocolData?.lider || '',
+		contrasena: '',
 	});
 
 	const handleInputChange = (key, value) => {
 		setFormData({ ...formData, [key]: value });
 	};
 
-	const handleFileChange = (file) => {
-		setFormData({ ...formData, pdf: file });
-	};
+	const handleSave = async () => {
+		const token = localStorage.getItem('log-token');
+		if (!token) {
+			toast({
+				title: 'Error',
+				description: 'No se encontró el token de autenticación.',
+				status: 'error',
+				duration: 5000,
+				isClosable: true,
+				position: 'top',
+			});
+			return;
+		}
 
-	const handleSave = () => {
-		onSave(formData); // Callback para guardar los cambios
-		toast({
-			title: 'Protocolo actualizado.',
-			description:
-				'La información del protocolo ha sido guardada exitosamente.',
-			status: 'success',
-			duration: 5000,
-			isClosable: true,
-			position: 'top',
-		});
-		onClose();
+		try {
+			// Llamar a la función de actualización
+			const response = await actualizarProtocolo(token, formData);
+
+			if (response.success) {
+				toast({
+					title: 'Protocolo actualizado.',
+					description:
+						response.message || 'El protocolo se actualizó exitosamente.',
+					status: 'success',
+					duration: 5000,
+					isClosable: true,
+					position: 'top',
+				});
+				onClose();
+				window.location.reload();
+			} else {
+				toast({
+					title: 'Error al actualizar.',
+					description:
+						response.message || 'Ocurrió un error al actualizar el protocolo.',
+					status: 'error',
+					duration: 5000,
+					isClosable: true,
+					position: 'top',
+				});
+			}
+		} catch (error) {
+			toast({
+				title: 'Error del servidor.',
+				description: 'No se pudo actualizar el protocolo.',
+				status: 'error',
+				duration: 5000,
+				isClosable: true,
+				position: 'top',
+			});
+			console.error('Error al actualizar el protocolo:', error);
+		}
 	};
 
 	return (
@@ -80,44 +115,23 @@ const EditProtocolModal = ({ protocolData, onSave }) => {
 							</FormControl>
 
 							<FormControl>
-								<FormLabel>Director</FormLabel>
+								<FormLabel>Líder</FormLabel>
 								<Input
-									placeholder="Nuevo nombre del director"
-									value={formData.director}
-									onChange={(e) =>
-										handleInputChange('director', e.target.value)
-									}
+									placeholder="Boleta o clave del líder"
+									value={formData.lider}
+									onChange={(e) => handleInputChange('lider', e.target.value)}
 								/>
 							</FormControl>
 
 							<FormControl>
-								<FormLabel>Director 2 (Opcional)</FormLabel>
+								<FormLabel>Contraseña</FormLabel>
 								<Input
-									placeholder="Nuevo nombre del segundo director"
-									value={formData.director_2}
+									type="password"
+									placeholder="Contraseña para confirmar"
+									value={formData.contrasena}
 									onChange={(e) =>
-										handleInputChange('director_2', e.target.value)
+										handleInputChange('contrasena', e.target.value)
 									}
-								/>
-							</FormControl>
-
-							<FormControl>
-								<FormLabel>Academia</FormLabel>
-								<Input
-									placeholder="Academia"
-									value={formData.academia}
-									onChange={(e) =>
-										handleInputChange('academia', e.target.value)
-									}
-								/>
-							</FormControl>
-
-							<FormControl>
-								<FormLabel>Archivo PDF</FormLabel>
-								<Input
-									type="file"
-									accept="application/pdf"
-									onChange={(e) => handleFileChange(e.target.files[0])}
 								/>
 							</FormControl>
 						</VStack>

@@ -164,9 +164,9 @@ export const consultarUsuarios = async (token, filtros = {}) => {
 		);
 		console.log('Usuarios encontrados:', response.data);
 
-		// Decodificar token para extraer información adicional si es necesario
-		const usuarioAutenticado = decodificarToken(token);
-		console.log('Usuario autenticado:', usuarioAutenticado);
+		// // Decodificar token para extraer información adicional si es necesario
+		// const usuarioAutenticado = decodificarToken(token);
+		// console.log('Usuario autenticado:', usuarioAutenticado);
 
 		return { success: true, data: response.data.usuarios };
 	} catch (error) {

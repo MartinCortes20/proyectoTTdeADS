@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import {
 	Box,
 	Flex,
@@ -22,23 +22,72 @@ import {
 } from '@chakra-ui/react';
 import { HamburgerIcon } from '@chakra-ui/icons';
 import { useNavigate } from 'react-router-dom';
-import { AuthContext } from '../context/AuthContext'; // Importa el AuthContext
+import { AuthContext } from '../context/AuthContext';
+import { jwtDecode } from 'jwt-decode'; // Importar correctamente
+import { consultarUsuarios } from '../api';
 
 const Navbar = () => {
 	const navigate = useNavigate();
-	const userRole = 'student'; // Cambiar el rol del usuario
-	const { isOpen, onOpen, onClose } = useDisclosure(); // Manejo del modal
-	const cancelRef = React.useRef(); // Referencia al botón de cancelar en el modal
-	const toast = useToast(); // Hook para manejar el toast
-	const { logout } = useContext(AuthContext); // Obtén el método `login` del contexto
+	const { isOpen, onOpen, onClose } = useDisclosure();
+	const cancelRef = React.useRef();
+	const toast = useToast();
+	const { logout } = useContext(AuthContext);
+
+	// Estados para manejar el rol y los permisos
+	const [userRole, setUserRole] = useState(null);
+	const [idEquipo, setIdEquipo] = useState(null);
+	const [idProtocolo, setIdProtocolo] = useState(null);
+	const [perfilUsuario, setPerfilUsuario] = useState(null);
+
+	useEffect(() => {
+		(async () => {
+			try {
+				// Obtener el token desde el localStorage
+				const storedToken = localStorage.getItem('log-token');
+
+				if (storedToken) {
+					// Decodificar el token para obtener la boleta
+					const payload = jwtDecode(storedToken);
+					const { boleta, rol } = payload;
+
+					setUserRole(rol);
+
+					// Obtener la información del usuario
+					const response = await consultarUsuarios(storedToken, { boleta });
+					if (response.success && response.data.length > 0) {
+						const usuario = response.data[0];
+						setPerfilUsuario(usuario);
+						setIdEquipo(usuario.id_equipo || null);
+						setIdProtocolo(usuario.id_protocolo || null);
+					} else {
+						toast({
+							title: 'Error',
+							description: 'No se pudo obtener la información del usuario.',
+							status: 'error',
+							duration: 3000,
+							isClosable: true,
+						});
+					}
+				}
+			} catch (error) {
+				toast({
+					title: 'Error',
+					description: 'Ocurrió un problema al cargar los datos.',
+					status: 'error',
+					duration: 3000,
+					isClosable: true,
+				});
+			}
+		})();
+	}, []);
 
 	// Función para confirmar el cierre de sesión
 	const handleLogoutConfirm = () => {
-		logout(); // Eliminar el token o realizar operaciones necesarias
-		navigate('/'); // Redirigir al usuario a la página de inicio de sesión
-		onClose(); // Cerrar el modal
+		logout(); // Cerrar sesión
+		navigate('/'); // Redirigir al inicio
+		onClose(); // Cerrar modal
 
-		// Mostrar el toast de confirmación
+		// Mostrar toast de confirmación
 		toast({
 			title: 'Sesión cerrada',
 			description: 'Has cerrado sesión exitosamente.',
@@ -69,7 +118,7 @@ const Navbar = () => {
 				<Spacer />
 
 				{/* Menú para ADMIN */}
-				{userRole === 'admin' && (
+				{userRole === 'ADMIN' && (
 					<Flex display={{ base: 'none', md: 'flex' }}>
 						<Link
 							href="/admin/dashboard"
@@ -92,25 +141,11 @@ const Navbar = () => {
 						>
 							Equipos
 						</Link>
-						<Link
-							href="/admin/assign-judges"
-							mx={2}
-							fontWeight="bold"
-						>
-							Asignar Sinodales
-						</Link>
-						<Link
-							href="/admin/evaluations"
-							mx={2}
-							fontWeight="bold"
-						>
-							Calificaciones
-						</Link>
 					</Flex>
 				)}
 
 				{/* Menú para ESTUDIANTE */}
-				{userRole === 'student' && (
+				{userRole === 'ESTUDIANTE' && (
 					<Flex display={{ base: 'none', md: 'flex' }}>
 						<Link
 							href="/student"
@@ -119,20 +154,26 @@ const Navbar = () => {
 						>
 							Dashboard
 						</Link>
-						<Link
-							href="/student/create-team"
-							mx={2}
-							fontWeight="bold"
-						>
-							Crear Equipo
-						</Link>
-						<Link
-							href="/student/create-protocol"
-							mx={2}
-							fontWeight="bold"
-						>
-							Crear Protocolo
-						</Link>
+						{/* Ocultar la sección "Crear Equipo" si idEquipo tiene valor */}
+						{!idEquipo && (
+							<Link
+								href="/student/create-team"
+								mx={2}
+								fontWeight="bold"
+							>
+								Crear Equipo
+							</Link>
+						)}
+						{/* Ocultar la sección "Crear Protocolo" si idProtocolo tiene valor */}
+						{!idProtocolo && (
+							<Link
+								href="/student/create-protocol"
+								mx={2}
+								fontWeight="bold"
+							>
+								Crear Protocolo
+							</Link>
+						)}
 					</Flex>
 				)}
 
@@ -142,12 +183,12 @@ const Navbar = () => {
 						as={IconButton}
 						icon={<HamburgerIcon />}
 						display={{ base: 'block', md: 'none' }}
-						variant="outline"
+						// variant="outline"
 						color="white"
 						bg="#2B6CB0"
 					/>
 					<MenuList color="black">
-						{userRole === 'admin' && (
+						{userRole === 'ADMIN' && (
 							<>
 								<MenuItem
 									as="a"
@@ -181,7 +222,7 @@ const Navbar = () => {
 								</MenuItem>
 							</>
 						)}
-						{userRole === 'student' && (
+						{userRole === 'ESTUDIANTE' && (
 							<>
 								<MenuItem
 									as="a"
@@ -189,33 +230,35 @@ const Navbar = () => {
 								>
 									Dashboard
 								</MenuItem>
-								<MenuItem
-									as="a"
-									href="/student/create-team"
-								>
-									Crear Equipo
-								</MenuItem>
-								<MenuItem
-									as="a"
-									href="/student/create-protocol"
-								>
-									Crear Protocolo
-								</MenuItem>
+								{!idEquipo && (
+									<MenuItem
+										as="a"
+										href="/student/create-team"
+									>
+										Crear Equipo
+									</MenuItem>
+								)}
+								{!idProtocolo && (
+									<MenuItem
+										as="a"
+										href="/student/create-protocol"
+									>
+										Crear Protocolo
+									</MenuItem>
+								)}
 							</>
 						)}
 					</MenuList>
 				</Menu>
-
 				<Button
 					colorScheme="red"
 					ml={4}
 					size="sm"
-					onClick={onOpen} // Abrir el modal
+					onClick={onOpen}
 				>
 					Cerrar Sesión
 				</Button>
 			</Flex>
-
 			{/* Modal de confirmación */}
 			<AlertDialog
 				isOpen={isOpen}
@@ -230,11 +273,9 @@ const Navbar = () => {
 						>
 							Confirmar Cierre de Sesión
 						</AlertDialogHeader>
-
 						<AlertDialogBody>
 							¿Estás seguro de que deseas cerrar sesión?
 						</AlertDialogBody>
-
 						<AlertDialogFooter>
 							<Button
 								ref={cancelRef}

@@ -77,8 +77,8 @@ const EditProfileModal = ({ userData }) => {
 					isClosable: true,
 					position: 'top',
 				});
-				onClose(); // Cerrar el modal
-				window.location.reload(); // Recargar la página para ver los cambios
+				onClose();
+				window.location.reload();
 			} else {
 				toast({
 					title: 'Error al actualizar.',
