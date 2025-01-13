@@ -10,58 +10,54 @@ import {
 	useDisclosure,
 } from '@chakra-ui/react';
 import { useRef } from 'react';
-import { jwtDecode } from 'jwt-decode';
-import { useNavigate } from 'react-router-dom';
 import { eliminarUsuario } from '../../api';
 
-const DeleteProfileButton = () => {
+const DeleteProfileButton = ({ userData }) => {
 	const { isOpen, onOpen, onClose } = useDisclosure();
 	const cancelRef = useRef();
 	const toast = useToast();
-	const navigate = useNavigate();
 
 	const handleDelete = async () => {
-		// Obtener el token desde localStorage
-		const token = localStorage.getItem('log-token');
-		if (!token) {
-			toast({
-				title: 'Error',
-				description: 'No se encontró el token de autenticación.',
-				status: 'error',
-				duration: 5000,
-				isClosable: true,
-				position: 'top',
-			});
-			return;
-		}
-
-		// Decodificar el token para obtener la boleta
-		const payload = jwtDecode(token);
-		const { boleta } = payload;
-
-		// Preparar los datos para la solicitud
-		const dataToSend = { boleta };
-
-		// Llamar a la función eliminarUsuario
 		try {
+			// Obtener el token desde localStorage
+			const token = localStorage.getItem('log-token');
+			if (!token) {
+				toast({
+					title: 'Error',
+					description: 'No se encontró el token de autenticación.',
+					status: 'error',
+					duration: 5000,
+					isClosable: true,
+					position: 'top',
+				});
+				return;
+			}
+
+			// Preparar los datos para la eliminación
+			const dataToSend = {
+				boleta: userData?.boleta || null,
+				clave_empleado: userData?.clave_empleado || null,
+			};
+
+			// Llamar a la API para eliminar el usuario
 			const response = await eliminarUsuario(token, dataToSend);
 
 			if (response.success) {
 				toast({
-					title: 'Perfil eliminado.',
-					description: 'Tu cuenta ha sido eliminada exitosamente.',
+					title: 'Usuario eliminado.',
+					description: `El usuario ${
+						userData?.nombre || 'desconocido'
+					} ha sido eliminado exitosamente.`,
 					status: 'success',
 					duration: 5000,
 					isClosable: true,
 					position: 'top',
 				});
-				onClose(); // Cerrar el modal
-
-				// Opcional: Redirigir al usuario después de eliminar su cuenta
-				navigate('/');
+				onClose();
+				window.location.reload();
 			} else {
 				toast({
-					title: 'Error al eliminar cuenta.',
+					title: 'Error al eliminar.',
 					description: response.message || 'Ocurrió un error inesperado.',
 					status: 'error',
 					duration: 5000,
@@ -72,7 +68,7 @@ const DeleteProfileButton = () => {
 		} catch (error) {
 			toast({
 				title: 'Error del servidor.',
-				description: 'No se pudo eliminar la cuenta.',
+				description: 'No se pudo eliminar al usuario.',
 				status: 'error',
 				duration: 5000,
 				isClosable: true,
@@ -86,8 +82,9 @@ const DeleteProfileButton = () => {
 			<Button
 				colorScheme="red"
 				onClick={onOpen}
+				isDisabled={!userData} // Deshabilitar si no hay datos del usuario
 			>
-				Eliminar Cuenta
+				Eliminar Usuario
 			</Button>
 
 			<AlertDialog
@@ -101,11 +98,22 @@ const DeleteProfileButton = () => {
 							fontSize="lg"
 							fontWeight="bold"
 						>
-							Eliminar Cuenta
+							Eliminar Usuario
 						</AlertDialogHeader>
 
 						<AlertDialogBody>
-							¿Estás seguro? Esta acción no se puede deshacer.
+							{userData ? (
+								<>
+									¿Estás seguro de que deseas eliminar al usuario{' '}
+									<strong>{userData.nombre}</strong>? Esta acción no se puede
+									deshacer.
+								</>
+							) : (
+								<>
+									No se puede eliminar al usuario porque no se encontraron
+									datos.
+								</>
+							)}
 						</AlertDialogBody>
 
 						<AlertDialogFooter>
@@ -119,6 +127,7 @@ const DeleteProfileButton = () => {
 								colorScheme="red"
 								onClick={handleDelete}
 								ml={3}
+								isDisabled={!userData} // Deshabilitar si no hay datos del usuario
 							>
 								Eliminar
 							</Button>

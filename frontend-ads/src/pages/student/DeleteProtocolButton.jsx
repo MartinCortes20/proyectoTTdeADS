@@ -10,28 +10,69 @@ import {
 	useDisclosure,
 } from '@chakra-ui/react';
 import { useRef } from 'react';
+import { eliminarProtocolo } from '../../api';
 
-const DeleteProtocolButton = ({ onDelete }) => {
+const DeleteProtocolButton = ({ protocolData }) => {
 	const { isOpen, onOpen, onClose } = useDisclosure();
 	const cancelRef = useRef();
 	const toast = useToast();
 
-	const handleDelete = () => {
-		// Ejecutar la función de eliminación
-		onDelete();
+	const handleDelete = async () => {
+		try {
+			// Obtener el token del almacenamiento
+			const token = localStorage.getItem('log-token');
+			if (!token) {
+				toast({
+					title: 'Error',
+					description: 'No se encontró el token de autenticación.',
+					status: 'error',
+					duration: 5000,
+					isClosable: true,
+					position: 'top',
+				});
+				return;
+			}
 
-		// Mostrar Toast
-		toast({
-			title: 'Protocolo eliminado.',
-			description: 'El protocolo ha sido eliminado exitosamente.',
-			status: 'success',
-			duration: 5000,
-			isClosable: true,
-			position: 'top',
-		});
+			// Preparar los datos para la eliminación
+			const dataToSend = {
+				lider: protocolData.lider,
+				titulo_protocolo: protocolData.titulo,
+			};
 
-		// Cerrar el modal
-		onClose();
+			// Llamar a la API para eliminar el protocolo
+			const response = await eliminarProtocolo(token, dataToSend);
+
+			if (response.success) {
+				toast({
+					title: 'Protocolo eliminado.',
+					description: `El protocolo "${protocolData.titulo}" ha sido eliminado exitosamente.`,
+					status: 'success',
+					duration: 5000,
+					isClosable: true,
+					position: 'top',
+				});
+				onClose();
+				window.location.reload();
+			} else {
+				toast({
+					title: 'Error al eliminar.',
+					description: response.message || 'No se pudo eliminar el protocolo.',
+					status: 'error',
+					duration: 5000,
+					isClosable: true,
+					position: 'top',
+				});
+			}
+		} catch (error) {
+			toast({
+				title: 'Error del servidor.',
+				description: 'No se pudo eliminar el protocolo.',
+				status: 'error',
+				duration: 5000,
+				isClosable: true,
+				position: 'top',
+			});
+		}
 	};
 
 	return (
@@ -58,7 +99,9 @@ const DeleteProtocolButton = ({ onDelete }) => {
 						</AlertDialogHeader>
 
 						<AlertDialogBody>
-							¿Estás seguro? Esto eliminará permanentemente el protocolo.
+							¿Estás seguro de que deseas eliminar el protocolo "
+							<strong>{protocolData.titulo}</strong>"? Esto eliminará el
+							protocolo permanentemente.
 						</AlertDialogBody>
 
 						<AlertDialogFooter>

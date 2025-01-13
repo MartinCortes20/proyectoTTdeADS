@@ -17,13 +17,14 @@ import {
 	StepDescription,
 	StepSeparator,
 	useSteps,
+	useBreakpointValue,
 } from '@chakra-ui/react';
 import React, { useEffect, useState } from 'react';
 import EditProfileModal from './EditProfileModal';
 import DeleteProfileButton from './DeleteProfileButton';
 import DeleteTeamButton from './DeleteTeamButton';
 import EditTeamModal from './EditTeamModal';
-import UpdateProtocolModal from './UpdateProtocolModal';
+import UpdateProtocolModal from './UpdatePDFProtocolModal';
 import EditProtocolModal from './EditProtocolModal';
 import DeleteProtocolButton from './DeleteProtocolButton';
 import {
@@ -38,6 +39,10 @@ const DashboardStudent = () => {
 	const [miEquipo, setMiEquipo] = useState(null);
 	const [perfilUsuario, setPerfilUsuario] = useState(null);
 	const [miProtocolo, setMiProtocolo] = useState(null);
+	const stepperOrientation = useBreakpointValue({
+		base: 'vertical',
+		md: 'horizontal',
+	});
 
 	const steps = [
 		{
@@ -53,6 +58,13 @@ const DashboardStudent = () => {
 			title: 'Subir PDF de Protocolo',
 			description: 'PDF Protocolo asignado',
 		},
+	];
+
+	const stepsProtocol = [
+		{ title: 'Registro', description: 'Creación inicial del protocolo' },
+		{ title: 'Revisión', description: 'Revisión por los responsables' },
+		{ title: 'Retroalimentación', description: 'Ajustes y correcciones' },
+		{ title: 'Aprobación', description: 'Protocolo aprobado oficialmente' },
 	];
 
 	useEffect(() => {
@@ -114,17 +126,22 @@ const DashboardStudent = () => {
 	}, []);
 
 	useEffect(() => {
-		// Actualizar el Stepper dinámicamente
-		if (perfilUsuario) {
+		// Determinar el paso activo basado en las condiciones
+		if (!perfilUsuario) {
+			setActiveStep(0);
+		} else if (!miEquipo) {
 			setActiveStep(1);
-		}
-		if (miEquipo) {
+		} else if (!miProtocolo) {
 			setActiveStep(2);
-		}
-		if (miProtocolo) {
+		} else if (miProtocolo?.pdf === 'EN PROGRESO') {
 			setActiveStep(3);
+		} else {
+			setActiveStep(4); // Último paso, PDF completado
 		}
 	}, [perfilUsuario, miEquipo, miProtocolo, setActiveStep]);
+
+	console.log(miEquipo, miProtocolo, perfilUsuario);
+
 	return (
 		<Box
 			bg="#EDF2F7"
@@ -147,6 +164,7 @@ const DashboardStudent = () => {
 			<Box mb={8}>
 				<Stepper
 					index={activeStep}
+					orientation={stepperOrientation} // Usa la variable para cambiar la orientación
 					colorScheme="blue"
 					size="lg"
 					gap="0"
@@ -215,7 +233,7 @@ const DashboardStudent = () => {
 									justify="space-between"
 								>
 									<EditTeamModal teamData={miEquipo} />
-									<DeleteTeamButton />
+									<DeleteTeamButton teamData={miEquipo} />
 								</Flex>
 							</>
 						) : (
@@ -267,7 +285,7 @@ const DashboardStudent = () => {
 							justify="space-between"
 						>
 							<EditProfileModal userData={perfilUsuario} />
-							<DeleteProfileButton />
+							<DeleteProfileButton userData={perfilUsuario} />
 						</Flex>
 					</CardBody>
 				</Card>
@@ -301,10 +319,12 @@ const DashboardStudent = () => {
 
 								<Text fontWeight="bold">PDF Subido:</Text>
 								<Text
-									color={miEquipo.pdf ? '#38A169' : '#E53E3E'}
+									color={
+										miProtocolo?.pdf !== 'EN PROGRESO' ? '#38A169' : '#E53E3E'
+									}
 									fontWeight="bold"
 								>
-									{miEquipo.pdf ? 'Sí' : 'No'}
+									{miProtocolo?.pdf !== 'EN PROGRESO' ? 'Sí' : 'No'}
 								</Text>
 
 								<Flex
@@ -312,7 +332,7 @@ const DashboardStudent = () => {
 									justify="space-between"
 								>
 									<EditProtocolModal protocolData={miProtocolo} />
-									<DeleteProtocolButton />
+									<DeleteProtocolButton protocolData={miProtocolo} />
 								</Flex>
 							</>
 						) : (
@@ -346,10 +366,11 @@ const DashboardStudent = () => {
 					</CardBody>
 				</Card>
 
-				{/* Etapa del Protocolo */}
+				{/* Etapas del Protocolo en Stepper */}
 				<Card
 					boxShadow="lg"
 					borderRadius="md"
+					gridColumn="1 / -1"
 				>
 					<CardHeader
 						bg="#2B6CB0"
@@ -357,17 +378,40 @@ const DashboardStudent = () => {
 						p={4}
 						borderRadius="md"
 					>
-						Etapa del Protocolo
+						Etapas del Protocolo
 					</CardHeader>
-					<CardBody p={4}>
-						<Text fontWeight="bold">Etapa Actual:</Text>
-						<Text
-							fontSize="lg"
-							fontWeight="bold"
-							color="#D69E2E"
-						>
-							Revisión
-						</Text>
+					<CardBody>
+						{miProtocolo ? (
+							<Stepper
+								index={stepsProtocol.findIndex(
+									(step) => step.title === miProtocolo.etapa
+								)}
+								colorScheme="yellow"
+								orientation={stepperOrientation}
+								size="lg"
+							>
+								{stepsProtocol.map((step, index) => (
+									<Step key={index}>
+										<StepIndicator>
+											<StepStatus
+												complete={<StepIcon />}
+												incomplete={<StepNumber />}
+												active={<StepNumber />}
+											/>
+										</StepIndicator>
+										<Box ml={4}>
+											<StepTitle>{step.title}</StepTitle>
+											<StepDescription>{step.description}</StepDescription>
+										</Box>
+										{index < steps.length - 1 && <StepSeparator />}
+									</Step>
+								))}
+							</Stepper>
+						) : (
+							<Text>
+								No se encontró información de las etapas del protocolo.
+							</Text>
+						)}
 					</CardBody>
 				</Card>
 
@@ -375,6 +419,7 @@ const DashboardStudent = () => {
 				<Card
 					boxShadow="lg"
 					borderRadius="md"
+					gridColumn="1 / -1"
 				>
 					<CardHeader
 						bg="#2B6CB0"
@@ -382,17 +427,31 @@ const DashboardStudent = () => {
 						p={4}
 						borderRadius="md"
 					>
-						Actualizar Protocolo
+						{miProtocolo?.pdf !== 'EN PROGRESO'
+							? 'Actualizar Protocolo'
+							: 'Subir PDF'}
 					</CardHeader>
 					<CardBody p={4}>
 						<Text fontWeight="bold">
-							Sube un nuevo archivo PDF si es necesario.
+							{miProtocolo?.pdf !== 'EN PROGRESO'
+								? 'Actualiza los detalles del protocolo o sube un nuevo archivo PDF.'
+								: 'Sube un archivo PDF para completar el protocolo.'}
 						</Text>
 						<Flex
 							mt={4}
 							justify="center"
 						>
-							<UpdateProtocolModal />
+							<UpdateProtocolModal
+								protocolData={{
+									lider: miProtocolo?.lider || miEquipo?.lider || '',
+									titulo: miProtocolo?.titulo || miEquipo?.titulo || '',
+									director: miProtocolo?.director || miEquipo?.director || '',
+									director_2:
+										miProtocolo?.director_2 || miEquipo?.director_2 || '',
+									academia: miProtocolo?.academia || miEquipo?.academia || '',
+								}}
+								mode={miProtocolo?.pdf !== 'EN PROGRESO' ? 'update' : 'upload'}
+							/>
 						</Flex>
 					</CardBody>
 				</Card>
