@@ -1,67 +1,111 @@
+import React, { useState, useEffect } from 'react';
 import {
 	Box,
-	Button,
 	FormControl,
 	FormLabel,
-	Table,
-	Thead,
-	Tbody,
-	Tr,
-	Th,
-	Td,
-	Checkbox,
-	CheckboxGroup,
-	Stack,
+	Select,
+	Button,
 	useToast,
 } from '@chakra-ui/react';
-import { useState } from 'react';
+import {
+	consultarProtocolos,
+	consultarEquipos,
+	asignarSinodales,
+} from '../../api';
 
 const AssignJudgesPage = () => {
 	const toast = useToast();
-	const [protocols, setProtocols] = useState([
-		{ id: 1, titulo: 'TT Gestion' },
-		{ id: 2, titulo: 'CryptoPredict' },
-	]);
-	const [judges, setJudges] = useState([
-		{ id: 1, nombre: 'Alexis' },
-		{ id: 2, nombre: 'Martin' },
-		{ id: 3, nombre: 'Diego' },
-		{ id: 4, nombre: 'Alan' },
-	]);
+	const [protocols, setProtocols] = useState([]);
+	const [teams, setTeams] = useState([]);
 	const [selectedProtocol, setSelectedProtocol] = useState('');
-	const [selectedJudges, setSelectedJudges] = useState([]);
-	const [assignments, setAssignments] = useState([]);
+	const [selectedTeam, setSelectedTeam] = useState('');
 
-	const handleAssign = () => {
-		if (selectedProtocol && selectedJudges.length === 3) {
-			const protocolTitle = protocols.find(
-				(p) => p.id === parseInt(selectedProtocol)
-			).titulo;
-			const selectedJudgeNames = selectedJudges.map((id) => {
-				const judge = judges.find((j) => j.id === parseInt(id));
-				return judge ? judge.nombre : '';
-			});
+	// Cargar protocolos y equipos desde el backend
+	useEffect(() => {
+		const fetchData = async () => {
+			try {
+				const token = localStorage.getItem('log-token');
+				if (!token) {
+					toast({
+						title: 'Error',
+						description: 'Token no encontrado.',
+						status: 'error',
+						duration: 5000,
+						isClosable: true,
+					});
+					return;
+				}
 
-			setAssignments([
-				...assignments,
-				{ protocolo: protocolTitle, sinodales: selectedJudgeNames },
-			]);
+				// Obtener equipos
+				const responseEquipos = await consultarEquipos(token, {});
+				if (responseEquipos.success) {
+					setTeams(responseEquipos.data || []);
+				} else {
+					throw new Error(responseEquipos.message);
+				}
 
+				// Obtener protocolos
+				const responseProtocols = await consultarProtocolos(token, {});
+				if (responseProtocols.success) {
+					setProtocols(responseProtocols.data || []);
+				} else {
+					throw new Error(responseProtocols.message);
+				}
+			} catch (error) {
+				toast({
+					title: 'Error al cargar datos',
+					description: error.message,
+					status: 'error',
+					duration: 5000,
+					isClosable: true,
+				});
+			}
+		};
+
+		fetchData();
+	}, []);
+
+	const handleAssign = async () => {
+		if (!selectedTeam || !selectedProtocol) {
 			toast({
-				title: 'Sinodales asignados.',
-				description: `Sinodales asignados para el protocolo: ${protocolTitle}.`,
-				status: 'success',
+				title: 'Error',
+				description: 'Debe seleccionar un equipo y un protocolo.',
+				status: 'error',
 				duration: 5000,
 				isClosable: true,
 			});
+			return;
+		}
 
-			setSelectedProtocol('');
-			setSelectedJudges([]);
-		} else {
+		try {
+			const token = localStorage.getItem('log-token');
+
+			// Preparar datos para enviar al backend
+			const data = {
+				equipo: selectedTeam,
+				titulo_protocolo: selectedProtocol,
+			};
+
+			// Llamar a la API para asignar sinodales
+			const response = await asignarSinodales(token, data);
+
+			if (response.success) {
+				toast({
+					title: 'Sinodales asignados',
+					description: `Sinodales asignados para el equipo "${selectedTeam}" y protocolo "${selectedProtocol}".`,
+					status: 'success',
+					duration: 5000,
+					isClosable: true,
+				});
+				setSelectedTeam('');
+				setSelectedProtocol('');
+			} else {
+				throw new Error(response.message);
+			}
+		} catch (error) {
 			toast({
-				title: 'Error.',
-				description:
-					'Debe seleccionar un protocolo y exactamente tres sinodales.',
+				title: 'Error',
+				description: 'Ocurrió un error al asignar los sinodales.',
 				status: 'error',
 				duration: 5000,
 				isClosable: true,
@@ -69,73 +113,57 @@ const AssignJudgesPage = () => {
 		}
 	};
 
-	const handleJudgeChange = (selectedValues) => {
-		setSelectedJudges(selectedValues);
-	};
-
+	console.log(selectedProtocol, selectedTeam);
 	return (
 		<Box
 			p={8}
 			bg="#EDF2F7"
 			minH="100vh"
+			display="flex"
+			flexDirection="column"
+			justifyContent="center"
+			alignItems="center"
 		>
 			<Box
 				bg="white"
 				p={6}
 				borderRadius="md"
 				boxShadow="lg"
-				mb={6}
 			>
 				<FormControl mb={4}>
+					<FormLabel>Seleccionar Equipo</FormLabel>
+					<Select
+						placeholder="Seleccione un equipo"
+						value={selectedTeam}
+						onChange={(e) => setSelectedTeam(e.target.value)}
+					>
+						{teams.map((team) => (
+							<option
+								key={team.id_equipo}
+								value={team.nombre_equipo}
+							>
+								{team.nombre_equipo}
+							</option>
+						))}
+					</Select>
+				</FormControl>
+
+				<FormControl mb={4}>
 					<FormLabel>Seleccionar Protocolo</FormLabel>
-					<select
+					<Select
+						placeholder="Seleccione un protocolo"
 						value={selectedProtocol}
 						onChange={(e) => setSelectedProtocol(e.target.value)}
-						style={{
-							width: '100%',
-							padding: '8px',
-							borderRadius: '4px',
-							border: '1px solid #CBD5E0',
-						}}
 					>
-						<option
-							value=""
-							disabled
-						>
-							Seleccione un protocolo
-						</option>
 						{protocols.map((protocol) => (
 							<option
-								key={protocol.id}
-								value={protocol.id}
+								key={protocol.id_protocolo}
+								value={protocol.titulo}
 							>
 								{protocol.titulo}
 							</option>
 						))}
-					</select>
-				</FormControl>
-
-				<FormControl mb={4}>
-					<FormLabel>Seleccionar Sinodales (3 sinodales)</FormLabel>
-					<CheckboxGroup
-						value={selectedJudges}
-						onChange={handleJudgeChange}
-					>
-						<Stack spacing={2}>
-							{judges.map((judge) => (
-								<Checkbox
-									key={judge.id}
-									value={judge.id.toString()}
-									isDisabled={
-										selectedJudges.length >= 3 &&
-										!selectedJudges.includes(judge.id.toString())
-									}
-								>
-									{judge.nombre}
-								</Checkbox>
-							))}
-						</Stack>
-					</CheckboxGroup>
+					</Select>
 				</FormControl>
 
 				<Button
@@ -145,28 +173,6 @@ const AssignJudgesPage = () => {
 					Asignar Sinodales
 				</Button>
 			</Box>
-
-			<Table
-				variant="simple"
-				bg="white"
-				boxShadow="lg"
-				borderRadius="md"
-			>
-				<Thead>
-					<Tr>
-						<Th>Protocolo</Th>
-						<Th>Sinodales</Th>
-					</Tr>
-				</Thead>
-				<Tbody>
-					{assignments.map((assignment, index) => (
-						<Tr key={index}>
-							<Td>{assignment.protocolo}</Td>
-							<Td>{assignment.sinodales.join(', ')}</Td>
-						</Tr>
-					))}
-				</Tbody>
-			</Table>
 		</Box>
 	);
 };

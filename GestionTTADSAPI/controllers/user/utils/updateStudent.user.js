@@ -16,11 +16,9 @@ const updateStudent = async (req = request, res = response) => {
 	try {
 		// Validar que la boleta esté presente
 		if (!boleta) {
-			return res
-				.status(400)
-				.json({
-					message: 'La boleta es obligatoria para actualizar un alumno.',
-				});
+			return res.status(400).json({
+				message: 'La boleta es obligatoria para actualizar un alumno.',
+			});
 		}
 
 		// Convertir todos los valores a string y sanitizar entrada
@@ -43,11 +41,9 @@ const updateStudent = async (req = request, res = response) => {
 		);
 
 		if (rolePermissions.length === 0) {
-			return res
-				.status(403)
-				.json({
-					message: 'No tienes permisos suficientes para realizar esta acción.',
-				});
+			return res.status(403).json({
+				message: 'No tienes permisos suficientes para realizar esta acción.',
+			});
 		}
 
 		const permisos = rolePermissions[0].permisos;
@@ -57,12 +53,9 @@ const updateStudent = async (req = request, res = response) => {
 		const puedeActualizarCualquierDato = permisos.includes('G');
 
 		if (!puedeActualizarPropiosDatos && !puedeActualizarCualquierDato) {
-			return res
-				.status(403)
-				.json({
-					message:
-						'No tienes permisos para actualizar los datos de este alumno.',
-				});
+			return res.status(403).json({
+				message: 'No tienes permisos para actualizar los datos de este alumno.',
+			});
 		}
 
 		// Verificar si la boleta existe
@@ -87,12 +80,10 @@ const updateStudent = async (req = request, res = response) => {
 			}
 
 			if (alumnoData.correo !== correoActualStr) {
-				return res
-					.status(403)
-					.json({
-						message:
-							'El correo actual ingresado no coincide con el registrado en el sistema.',
-					});
+				return res.status(403).json({
+					message:
+						'El correo actual ingresado no coincide con el registrado en el sistema.',
+				});
 			}
 
 			const passwordMatch = await bcrypt.compare(
@@ -161,11 +152,9 @@ const updateStudent = async (req = request, res = response) => {
 		]);
 
 		if (existingUsers.length > 0) {
-			return res
-				.status(400)
-				.json({
-					message: 'El correo o nombre ya están registrados en otro usuario.',
-				});
+			return res.status(400).json({
+				message: 'El correo o nombre ya están registrados en otro usuario.',
+			});
 		}
 
 		// Actualizar alumno en la base de datos

@@ -10,16 +10,16 @@ import {
 	useDisclosure,
 } from '@chakra-ui/react';
 import { useRef } from 'react';
-import { eliminarEquipo } from '../../api'; // Importar la función de API para eliminar el equipo
+import { eliminarProtocolo } from '../../api';
 
-const DeleteTeamButton = ({ teamData }) => {
+const DeleteProtocolButton = ({ protocolData }) => {
 	const { isOpen, onOpen, onClose } = useDisclosure();
 	const cancelRef = useRef();
 	const toast = useToast();
 
 	const handleDelete = async () => {
 		try {
-			// Obtener el token desde el almacenamiento local
+			// Obtener el token del almacenamiento
 			const token = localStorage.getItem('log-token');
 			if (!token) {
 				toast({
@@ -35,17 +35,17 @@ const DeleteTeamButton = ({ teamData }) => {
 
 			// Preparar los datos para la eliminación
 			const dataToSend = {
-				lider: teamData.lider,
-				nombre_equipo: teamData.nombre_equipo,
+				lider: protocolData.lider,
+				titulo_protocolo: protocolData.titulo,
 			};
 
-			// Llamar a la API para eliminar el equipo
-			const response = await eliminarEquipo(token, dataToSend);
+			// Llamar a la API para eliminar el protocolo
+			const response = await eliminarProtocolo(token, dataToSend);
 
 			if (response.success) {
 				toast({
-					title: 'Equipo eliminado.',
-					description: 'El equipo ha sido eliminado exitosamente.',
+					title: 'Protocolo eliminado.',
+					description: `El protocolo "${protocolData.titulo}" ha sido eliminado exitosamente.`,
 					status: 'success',
 					duration: 5000,
 					isClosable: true,
@@ -56,7 +56,7 @@ const DeleteTeamButton = ({ teamData }) => {
 			} else {
 				toast({
 					title: 'Error al eliminar.',
-					description: response.message || 'No se pudo eliminar el equipo.',
+					description: response.message || 'No se pudo eliminar el protocolo.',
 					status: 'error',
 					duration: 5000,
 					isClosable: true,
@@ -66,7 +66,7 @@ const DeleteTeamButton = ({ teamData }) => {
 		} catch (error) {
 			toast({
 				title: 'Error del servidor.',
-				description: 'No se pudo eliminar el equipo.',
+				description: 'No se pudo eliminar el protocolo.',
 				status: 'error',
 				duration: 5000,
 				isClosable: true,
@@ -80,8 +80,9 @@ const DeleteTeamButton = ({ teamData }) => {
 			<Button
 				colorScheme="red"
 				onClick={onOpen}
+				size="sm"
 			>
-				Eliminar Equipo
+				Eliminar Protocolo
 			</Button>
 
 			<AlertDialog
@@ -95,12 +96,13 @@ const DeleteTeamButton = ({ teamData }) => {
 							fontSize="lg"
 							fontWeight="bold"
 						>
-							Eliminar Equipo
+							Eliminar Protocolo
 						</AlertDialogHeader>
 
 						<AlertDialogBody>
-							¿Estás seguro? Esto eliminará permanentemente el equipo:{' '}
-							<strong>{teamData.nombre_equipo}</strong>.
+							¿Estás seguro de que deseas eliminar el protocolo "
+							<strong>{protocolData.titulo}</strong>"? Esto eliminará el
+							protocolo permanentemente.
 						</AlertDialogBody>
 
 						<AlertDialogFooter>
@@ -125,4 +127,4 @@ const DeleteTeamButton = ({ teamData }) => {
 	);
 };
 
-export default DeleteTeamButton;
+export default DeleteProtocolButton;

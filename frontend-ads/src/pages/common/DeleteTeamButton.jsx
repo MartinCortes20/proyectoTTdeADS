@@ -10,16 +10,16 @@ import {
 	useDisclosure,
 } from '@chakra-ui/react';
 import { useRef } from 'react';
-import { eliminarUsuario } from '../../api';
+import { eliminarEquipo } from '../../api'; // Importar la función de API para eliminar el equipo
 
-const DeleteProfileButton = ({ userData }) => {
+const DeleteTeamButton = ({ teamData }) => {
 	const { isOpen, onOpen, onClose } = useDisclosure();
 	const cancelRef = useRef();
 	const toast = useToast();
 
 	const handleDelete = async () => {
 		try {
-			// Obtener el token desde localStorage
+			// Obtener el token desde el almacenamiento local
 			const token = localStorage.getItem('log-token');
 			if (!token) {
 				toast({
@@ -35,19 +35,17 @@ const DeleteProfileButton = ({ userData }) => {
 
 			// Preparar los datos para la eliminación
 			const dataToSend = {
-				boleta: userData?.boleta || null,
-				clave_empleado: userData?.clave_empleado || null,
+				lider: teamData.lider,
+				nombre_equipo: teamData.nombre_equipo,
 			};
 
-			// Llamar a la API para eliminar el usuario
-			const response = await eliminarUsuario(token, dataToSend);
+			// Llamar a la API para eliminar el equipo
+			const response = await eliminarEquipo(token, dataToSend);
 
 			if (response.success) {
 				toast({
-					title: 'Usuario eliminado.',
-					description: `El usuario ${
-						userData?.nombre || 'desconocido'
-					} ha sido eliminado exitosamente.`,
+					title: 'Equipo eliminado.',
+					description: 'El equipo ha sido eliminado exitosamente.',
 					status: 'success',
 					duration: 5000,
 					isClosable: true,
@@ -58,7 +56,7 @@ const DeleteProfileButton = ({ userData }) => {
 			} else {
 				toast({
 					title: 'Error al eliminar.',
-					description: response.message || 'Ocurrió un error inesperado.',
+					description: response.message || 'No se pudo eliminar el equipo.',
 					status: 'error',
 					duration: 5000,
 					isClosable: true,
@@ -68,7 +66,7 @@ const DeleteProfileButton = ({ userData }) => {
 		} catch (error) {
 			toast({
 				title: 'Error del servidor.',
-				description: 'No se pudo eliminar al usuario.',
+				description: 'No se pudo eliminar el equipo.',
 				status: 'error',
 				duration: 5000,
 				isClosable: true,
@@ -82,9 +80,9 @@ const DeleteProfileButton = ({ userData }) => {
 			<Button
 				colorScheme="red"
 				onClick={onOpen}
-				isDisabled={!userData} // Deshabilitar si no hay datos del usuario
+				size="sm"
 			>
-				Eliminar Usuario
+				Eliminar Equipo
 			</Button>
 
 			<AlertDialog
@@ -98,22 +96,12 @@ const DeleteProfileButton = ({ userData }) => {
 							fontSize="lg"
 							fontWeight="bold"
 						>
-							Eliminar Usuario
+							Eliminar Equipo
 						</AlertDialogHeader>
 
 						<AlertDialogBody>
-							{userData ? (
-								<>
-									¿Estás seguro de que deseas eliminar al usuario{' '}
-									<strong>{userData.nombre}</strong>? Esta acción no se puede
-									deshacer.
-								</>
-							) : (
-								<>
-									No se puede eliminar al usuario porque no se encontraron
-									datos.
-								</>
-							)}
+							¿Estás seguro? Esto eliminará permanentemente el equipo:{' '}
+							<strong>{teamData.nombre_equipo}</strong>.
 						</AlertDialogBody>
 
 						<AlertDialogFooter>
@@ -127,7 +115,6 @@ const DeleteProfileButton = ({ userData }) => {
 								colorScheme="red"
 								onClick={handleDelete}
 								ml={3}
-								isDisabled={!userData} // Deshabilitar si no hay datos del usuario
 							>
 								Eliminar
 							</Button>
@@ -139,4 +126,4 @@ const DeleteProfileButton = ({ userData }) => {
 	);
 };
 
-export default DeleteProfileButton;
+export default DeleteTeamButton;

@@ -16,6 +16,19 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { crearEquipo } from '../../api';
 
+const academias = [
+	'Academia de Programación y Algoritmos',
+	'Academia de Inteligencia Artificial y Ciencia de Datos',
+	'Academia de Redes y Sistemas Distribuidos',
+	'Academia de Desarrollo de Software',
+	'Academia de Bases de Datos y Sistemas de Información',
+	'Academia de Sistemas Digitales y Electrónica',
+	'Academia de Matemáticas y Ciencias Básicas',
+	'Academia de Gestión y Administración',
+	'Academia de Ética y Habilidades Blandas',
+	'Trabajo Terminal y Estancia Profesional',
+];
+
 const TeamFormPage = () => {
 	const [teamData, setTeamData] = useState({
 		nombre_equipo: '',
@@ -243,12 +256,21 @@ const TeamFormPage = () => {
 					>
 						Área/Academia
 					</FormLabel>
-					<Input
-						placeholder="Ingrese el área o academia"
+					<Select
+						placeholder="Seleccione el área o academia"
 						value={teamData.academia}
 						onChange={(e) => handleInputChange('academia', e.target.value)}
 						focusBorderColor="#2B6CB0"
-					/>
+					>
+						{academias.map((academia, index) => (
+							<option
+								key={index}
+								value={academia}
+							>
+								{academia}
+							</option>
+						))}
+					</Select>
 				</FormControl>
 
 				<Button

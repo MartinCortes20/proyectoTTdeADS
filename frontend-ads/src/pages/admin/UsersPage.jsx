@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from 'react';
 import {
 	Box,
 	Button,
@@ -7,56 +8,59 @@ import {
 	Tr,
 	Th,
 	Td,
-	Modal,
-	ModalOverlay,
-	ModalContent,
-	ModalHeader,
-	ModalBody,
-	ModalFooter,
 	Input,
 	Select,
-	useDisclosure,
 	useToast,
-	VStack,
+	Tag,
+	Flex,
+	Text,
+	IconButton,
+	useDisclosure,
 } from '@chakra-ui/react';
-import { useState, useEffect } from 'react';
+import { SearchIcon } from '@chakra-ui/icons';
+import { consultarUsuarios } from '../../api';
+import EditProfileModal from '../common/EditProfileModal';
+import DeleteProfileButton from '../common/DeleteProfileButton';
+import CreateUserModal from '../common/CreateUserModal';
 
 const UsersPage = () => {
-	const { isOpen, onOpen, onClose } = useDisclosure();
 	const toast = useToast();
-	const [editing, setEditing] = useState(false);
-	const [filters, setFilters] = useState({
-		rol: '',
-		correo: '',
-	});
-	const [users, setUsers] = useState([]);
-	const [userData, setUserData] = useState({
-		nombre: '',
-		correo: '',
-		rol: '',
-		clave: '', // Boleta o Clave de empleado
-		contrasena: '',
-	});
+	const [filters, setFilters] = useState({ tipo: '', correo_usuario: '' });
+	const [users, setUsers] = useState([]); // Datos originales del backend
+	const [filteredUsers, setFilteredUsers] = useState([]); // Usuarios filtrados para mostrar en la tabla
+	const { isOpen, onOpen, onClose } = useDisclosure();
 
-	// Obtener usuarios desde el backend
+	// Cargar usuarios desde el backend
 	const fetchUsers = async () => {
 		try {
-			const response = await fetch('/api/consult-users', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-					'log-token': 'your-token-here',
-				},
-				body: JSON.stringify(filters),
-			});
-			const result = await response.json();
-
-			if (response.ok) {
-				setUsers(result.usuarios || []);
+			const token = localStorage.getItem('log-token');
+			if (!token) {
+				toast({
+					id: 'no-token',
+					title: 'Error',
+					description: 'Token no encontrado.',
+					status: 'error',
+					duration: 3000,
+					isClosable: true,
+				});
+				return;
+			}
+			const response = await consultarUsuarios(token, {});
+			if (response.success) {
+				setUsers(response.data || []);
+				setFilteredUsers(response.data || []); // Inicializar usuarios filtrados
+				toast({
+					id: 'users-loaded',
+					title: 'Usuarios cargados.',
+					status: 'success',
+					duration: 3000,
+					isClosable: true,
+				});
 			} else {
 				toast({
+					id: 'error-loading',
 					title: 'Error al cargar usuarios',
-					description: result.message || 'Intenta más tarde.',
+					description: response.message,
 					status: 'error',
 					duration: 3000,
 					isClosable: true,
@@ -64,6 +68,7 @@ const UsersPage = () => {
 			}
 		} catch (error) {
 			toast({
+				id: 'server-error',
 				title: 'Error del servidor',
 				description: 'No se pudieron cargar los usuarios.',
 				status: 'error',
@@ -73,268 +78,159 @@ const UsersPage = () => {
 		}
 	};
 
-	// Guardar usuario (crear o actualizar)
-	const handleSave = async () => {
-		try {
-			const endpoint = editing ? '/api/update-user' : '/api/create-user';
-			const method = editing ? 'PUT' : 'POST';
+	// Aplicar filtro en el frontend
+	const applyFilters = () => {
+		let filtered = users;
 
-			const response = await fetch(endpoint, {
-				method,
-				headers: {
-					'Content-Type': 'application/json',
-					'log-token': 'your-token-here',
-				},
-				body: JSON.stringify(userData),
-			});
-			const result = await response.json();
-
-			if (response.ok) {
-				toast({
-					title: editing ? 'Usuario actualizado.' : 'Usuario creado.',
-					description: 'La operación se realizó exitosamente.',
-					status: 'success',
-					duration: 3000,
-					isClosable: true,
-				});
-				fetchUsers();
-				onClose();
-			} else {
-				toast({
-					title: 'Error',
-					description: result.message || 'Intenta más tarde.',
-					status: 'error',
-					duration: 3000,
-					isClosable: true,
-				});
-			}
-		} catch (error) {
-			toast({
-				title: 'Error del servidor',
-				description: 'No se pudo guardar el usuario.',
-				status: 'error',
-				duration: 3000,
-				isClosable: true,
-			});
+		// Filtrar por correo
+		if (filters.correo_usuario) {
+			filtered = filtered.filter((user) =>
+				user.correo_usuario
+					.toLowerCase()
+					.includes(filters.correo_usuario.toLowerCase())
+			);
 		}
+
+		// Filtrar por tipo (Alumno o Docente)
+		if (filters.tipo) {
+			filtered = filtered.filter((user) => user.tipo === filters.tipo);
+		}
+
+		setFilteredUsers(filtered);
 	};
 
-	// Eliminar usuario
-	const handleDelete = async (clave) => {
-		try {
-			const response = await fetch('/api/delete-user', {
-				method: 'DELETE',
-				headers: {
-					'Content-Type': 'application/json',
-					'log-token': 'your-token-here',
-				},
-				body: JSON.stringify({ clave }),
-			});
-			const result = await response.json();
-
-			if (response.ok) {
-				toast({
-					title: 'Usuario eliminado.',
-					description: `El usuario con clave ${clave} ha sido eliminado.`,
-					status: 'success',
-					duration: 3000,
-					isClosable: true,
-				});
-				fetchUsers();
-			} else {
-				toast({
-					title: 'Error',
-					description: result.message || 'Intenta más tarde.',
-					status: 'error',
-					duration: 3000,
-					isClosable: true,
-				});
-			}
-		} catch (error) {
-			toast({
-				title: 'Error del servidor',
-				description: 'No se pudo eliminar el usuario.',
-				status: 'error',
-				duration: 3000,
-				isClosable: true,
-			});
-		}
-	};
-
-	// Cargar usuarios al montar el componente
+	// Ejecutar la función de cargar usuarios cuando se monta el componente
 	useEffect(() => {
 		fetchUsers();
 	}, []);
 
+	// Ejecutar filtros cada vez que cambien los valores del filtro
+	useEffect(() => {
+		applyFilters();
+	}, [filters]);
+
+	console.log(users);
+
 	return (
 		<Box
-			p={8}
+			p={4}
 			bg="#EDF2F7"
 			minH="100vh"
+			display="flex"
+			flexDirection="column"
+			alignItems="center"
 		>
-			<Box mb={4}>
-				<Input
-					placeholder="Filtrar por correo"
-					value={filters.correo}
-					onChange={(e) => setFilters({ ...filters, correo: e.target.value })}
-					mb={2}
-				/>
-				<Select
-					placeholder="Filtrar por rol"
-					value={filters.rol}
-					onChange={(e) => setFilters({ ...filters, rol: e.target.value })}
+			<Box
+				w="full"
+				maxW="1200px"
+				bg="white"
+				p={6}
+				rounded="md"
+				shadow="md"
+				mb={4}
+			>
+				<Flex
+					direction={{ base: 'column', md: 'row' }}
+					gap={4}
+					align={{ md: 'center' }}
 					mb={4}
 				>
-					<option value="Estudiante">Estudiante</option>
-					<option value="Docente">Docente</option>
-					<option value="Admin">Admin</option>
-				</Select>
+					<Input
+						placeholder="Buscar por correo"
+						value={filters.correo_usuario}
+						onChange={(e) =>
+							setFilters({ ...filters, correo_usuario: e.target.value })
+						}
+						size="sm"
+					/>
+					<Select
+						placeholder="Filtrar por tipo"
+						value={filters.tipo}
+						onChange={(e) => setFilters({ ...filters, tipo: e.target.value })}
+						size="sm"
+					>
+						<option value="Alumno">Alumno</option>
+						<option value="Docente">Docente</option>
+					</Select>
+					<IconButton
+						aria-label="Aplicar filtro"
+						icon={<SearchIcon />}
+						colorScheme="blue"
+						size="sm"
+						onClick={applyFilters}
+					/>
+				</Flex>
 				<Button
-					colorScheme="blue"
-					onClick={fetchUsers}
+					colorScheme="green"
+					size="sm"
+					onClick={onOpen}
 				>
-					Filtrar
+					Crear Usuario
 				</Button>
+				<CreateUserModal
+					isOpen={isOpen}
+					onClose={onClose}
+				/>
 			</Box>
 
-			<Button
-				colorScheme="green"
-				mb={4}
-				onClick={() => {
-					setEditing(false);
-					setUserData({
-						nombre: '',
-						correo: '',
-						rol: '',
-						clave: '',
-						contrasena: '',
-					});
-					onOpen();
-				}}
-			>
-				Crear Usuario
-			</Button>
-
-			<Table
-				variant="simple"
+			<Box
+				w="full"
+				maxW="1200px"
 				bg="white"
-				boxShadow="lg"
-				borderRadius="md"
+				rounded="md"
+				shadow="md"
+				overflowX="auto"
+				overflowY="hidden"
 			>
-				<Thead>
-					<Tr>
-						<Th>Nombre</Th>
-						<Th>Correo</Th>
-						<Th>Rol</Th>
-						<Th>Clave/Boleta</Th>
-						<Th>Acciones</Th>
-					</Tr>
-				</Thead>
-				<Tbody>
-					{users.map((user) => (
-						<Tr key={user.id}>
-							<Td>{user.nombre}</Td>
-							<Td>{user.correo}</Td>
-							<Td>{user.rol}</Td>
-							<Td>{user.clave}</Td>
-							<Td>
-								<Button
-									colorScheme="yellow"
-									size="sm"
-									mr={2}
-									onClick={() => {
-										setEditing(true);
-										setUserData(user);
-										onOpen();
-									}}
-								>
-									Editar
-								</Button>
-								<Button
-									colorScheme="red"
-									size="sm"
-									onClick={() => handleDelete(user.clave)}
-								>
-									Eliminar
-								</Button>
-							</Td>
+				<Table
+					variant="simple"
+					colorScheme="gray"
+					size="sm"
+				>
+					<Thead>
+						<Tr>
+							<Th textAlign="center">Nombre</Th>
+							<Th textAlign="center">Correo</Th>
+							<Th textAlign="center">Tipo</Th>
+							<Th textAlign="center">Identificador</Th>
+							<Th textAlign="center">Estado</Th>
+							<Th textAlign="center">Acciones</Th>
 						</Tr>
-					))}
-				</Tbody>
-			</Table>
-
-			<Modal
-				isOpen={isOpen}
-				onClose={onClose}
-			>
-				<ModalOverlay />
-				<ModalContent>
-					<ModalHeader>
-						{editing ? 'Editar Usuario' : 'Crear Usuario'}
-					</ModalHeader>
-					<ModalBody>
-						<VStack
-							spacing={4}
-							align="stretch"
-						>
-							<Input
-								placeholder="Nombre"
-								value={userData.nombre}
-								onChange={(e) =>
-									setUserData({ ...userData, nombre: e.target.value })
-								}
-							/>
-							<Input
-								placeholder="Correo"
-								value={userData.correo}
-								onChange={(e) =>
-									setUserData({ ...userData, correo: e.target.value })
-								}
-							/>
-							<Select
-								placeholder="Seleccione un rol"
-								value={userData.rol}
-								onChange={(e) =>
-									setUserData({ ...userData, rol: e.target.value })
-								}
-							>
-								<option value="Estudiante">Estudiante</option>
-								<option value="Docente">Docente</option>
-								<option value="Admin">Admin</option>
-							</Select>
-							<Input
-								placeholder="Clave/Boleta"
-								value={userData.clave}
-								onChange={(e) =>
-									setUserData({ ...userData, clave: e.target.value })
-								}
-							/>
-							<Input
-								placeholder="Contraseña"
-								type="password"
-								value={userData.contrasena}
-								onChange={(e) =>
-									setUserData({ ...userData, contrasena: e.target.value })
-								}
-							/>
-						</VStack>
-					</ModalBody>
-					<ModalFooter>
-						<Button
-							colorScheme="blue"
-							onClick={handleSave}
-						>
-							Guardar
-						</Button>
-						<Button
-							onClick={onClose}
-							ml={3}
-						>
-							Cancelar
-						</Button>
-					</ModalFooter>
-				</ModalContent>
-			</Modal>
+					</Thead>
+					<Tbody>
+						{filteredUsers.map((user) => (
+							<Tr key={user.identificador}>
+								<Td textAlign="center">{user.nombre_usuario}</Td>
+								<Td textAlign="center">{user.correo_usuario}</Td>
+								<Td textAlign="center">{user.tipo}</Td>
+								<Td textAlign="center">{user.identificador}</Td>
+								<Td textAlign="center">
+									<Tag colorScheme={user.estado === 'A' ? 'green' : 'red'}>
+										{user.estado === 'A' ? 'Activo' : 'Inactivo'}
+									</Tag>
+								</Td>
+								<Td textAlign="center">
+									<Flex
+										gap={2}
+										justifyContent="center"
+									>
+										<EditProfileModal userData={user} />
+										<DeleteProfileButton userData={user} />
+									</Flex>
+								</Td>
+							</Tr>
+						))}
+					</Tbody>
+				</Table>
+				{filteredUsers.length === 0 && (
+					<Box
+						p={4}
+						textAlign="center"
+					>
+						<Text>No se encontraron usuarios.</Text>
+					</Box>
+				)}
+			</Box>
 		</Box>
 	);
 };

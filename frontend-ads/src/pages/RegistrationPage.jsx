@@ -103,6 +103,9 @@ const Register = () => {
 						if (formData.rol === 'ESTUDIANTE') {
 							navigate('/student');
 						} else if (formData.rol === 'DOCENTE') {
+							if (formData.funcion == 'ADMIN') {
+								navigate('/admin/dashboard');
+							}
 							navigate('/teacher');
 						}
 					} else {
@@ -224,7 +227,7 @@ const Register = () => {
 								<option value="ADMIN">ADMIN</option>
 								<option value="CATT">CATT</option>
 								<option value="DIRECTOR">DIRECTOR</option>
-								<option value="ESTUDIANTE">ESTUDIANTE</option>
+								<option value="DOCENTE">DOCENTE</option>
 								<option value="PRESIDENTE ACADEMIA">PRESIDENTE ACADEMIA</option>
 								<option value="PROFESOR">PROFESOR</option>
 								<option value="SECRETARIO">SECRETARIO</option>

@@ -10,6 +10,7 @@ import DashboardStudent from './pages/student/DashboardStudent';
 import TeamFormPage from './pages/student/CreateTeamFormPage';
 import AuthPage from './pages/AuthPage'; // Página que incluye login y register
 import ProtocolFormPage from './pages/student/CreateProtocolFormPage';
+import ProtocolsPage from './pages/admin/ProtocolsPage';
 
 const App = () => {
 	return (
@@ -37,6 +38,11 @@ const App = () => {
 									path="/admin/users"
 									element={<UsersPage />}
 								/>
+								<Route
+									path="/admin/protocols"
+									element={<ProtocolsPage />}
+								/>
+
 								<Route
 									path="/admin/teams"
 									element={<TeamsPage />}

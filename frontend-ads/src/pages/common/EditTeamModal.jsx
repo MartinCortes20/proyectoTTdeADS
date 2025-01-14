@@ -15,8 +15,20 @@ import {
 	VStack,
 } from '@chakra-ui/react';
 import { useState, useEffect } from 'react';
-import { actualizarEquipo } from '../../api'; // Función de API para actualizar el equipo
-import { jwtDecode } from 'jwt-decode';
+import { actualizarEquipo } from '../../api';
+
+const academias = [
+	'Academia de Programación y Algoritmos',
+	'Academia de Inteligencia Artificial y Ciencia de Datos',
+	'Academia de Redes y Sistemas Distribuidos',
+	'Academia de Desarrollo de Software',
+	'Academia de Bases de Datos y Sistemas de Información',
+	'Academia de Sistemas Digitales y Electrónica',
+	'Academia de Matemáticas y Ciencias Básicas',
+	'Academia de Gestión y Administración',
+	'Academia de Ética y Habilidades Blandas',
+	'Trabajo Terminal y Estancia Profesional',
+];
 
 const EditTeamModal = ({ teamData }) => {
 	const { isOpen, onOpen, onClose } = useDisclosure();
@@ -29,7 +41,7 @@ const EditTeamModal = ({ teamData }) => {
 		director: '',
 		director_2: '',
 		area: '',
-		contrasena: '', // Nueva propiedad para la contraseña
+		contrasena: '',
 	});
 
 	// Cargar datos del equipo al abrir el modal
@@ -41,7 +53,7 @@ const EditTeamModal = ({ teamData }) => {
 				director: teamData?.director || '',
 				director_2: teamData?.director_2 || '',
 				area: teamData?.area || '',
-				contrasena: '', // Inicializar la contraseña vacía
+				contrasena: '',
 			});
 		}
 	}, [isOpen, teamData]);
@@ -84,7 +96,6 @@ const EditTeamModal = ({ teamData }) => {
 			const dataToSend = {
 				...formData,
 			};
-			console.log(dataToSend);
 
 			// Llamar a la función de API para actualizar el equipo
 			const response = await actualizarEquipo(token, dataToSend);
@@ -128,6 +139,7 @@ const EditTeamModal = ({ teamData }) => {
 			<Button
 				colorScheme="yellow"
 				onClick={onOpen}
+				size="sm"
 			>
 				Editar Equipo
 			</Button>
@@ -187,11 +199,20 @@ const EditTeamModal = ({ teamData }) => {
 
 							<FormControl>
 								<FormLabel>Área/Academia</FormLabel>
-								<Input
-									placeholder="Nueva área"
+								<Select
+									placeholder="Seleccione el área o academia"
 									value={formData.area}
 									onChange={(e) => handleInputChange('area', e.target.value)}
-								/>
+								>
+									{academias.map((academia, index) => (
+										<option
+											key={index}
+											value={academia}
+										>
+											{academia}
+										</option>
+									))}
+								</Select>
 							</FormControl>
 
 							<FormControl>

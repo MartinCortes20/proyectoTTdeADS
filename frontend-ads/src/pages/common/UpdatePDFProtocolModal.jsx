@@ -110,6 +110,7 @@ const UpdateProtocolModal = ({ protocolData, mode }) => {
 			<Button
 				colorScheme={mode === 'update' ? 'blue' : 'green'}
 				onClick={onOpen}
+				size="sm"
 			>
 				{mode === 'update' ? 'Actualizar Protocolo' : 'Subir PDF'}
 			</Button>

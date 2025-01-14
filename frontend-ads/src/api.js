@@ -109,6 +109,28 @@ export const crearMaestro = async (
 };
 
 /**
+ * Crear un usuario.
+ * @param {string} token - Token de autenticación.
+ * @param {Object} data - Datos del usuario a crear.
+ * @returns {Promise<Object>} Respuesta del servidor.
+ */
+export const crearUsuario = async (token, data) => {
+	try {
+		const response = await axios.post(
+			`${BASE_URL}/usuario/registroUsuario`,
+			data,
+			{
+				headers: { 'log-token': token },
+			}
+		);
+		console.log('Usuario creado:', response.data);
+		return { success: true, data: response.data };
+	} catch (error) {
+		return handleRequestError(error, 'Error al registrar usuario.');
+	}
+};
+
+/**
  * Iniciar sesión.
  * @param {string} correo - Correo del usuario.
  * @param {string} contrasena - Contraseña del usuario.
@@ -215,6 +237,28 @@ export const actualizarDocente = async (token, data) => {
 		return { success: true, data: response.data };
 	} catch (error) {
 		return handleRequestError(error, 'Error al actualizar docente.');
+	}
+};
+
+/**
+ * Actualizar un usuario.
+ * @param {string} token - Token de autenticación.
+ * @param {Object} data - Datos del usuario a actualizar.
+ * @returns {Promise<Object>} Respuesta del servidor.
+ */
+export const actualizarUsuario = async (token, data) => {
+	try {
+		const response = await axios.put(
+			`${BASE_URL}/usuario/actualizarUsuario`,
+			data,
+			{
+				headers: { 'log-token': token },
+			}
+		);
+		console.log('Usuario actualizado:', response.data);
+		return { success: true, data: response.data };
+	} catch (error) {
+		return handleRequestError(error, 'Error al actualizar usuario.');
 	}
 };
 

@@ -1,21 +1,20 @@
 import React, { useState } from 'react';
 import {
-	Box,
+	Modal,
+	ModalOverlay,
+	ModalContent,
+	ModalHeader,
+	ModalBody,
+	ModalFooter,
 	Button,
 	FormControl,
 	FormLabel,
 	Input,
 	Select,
-	VStack,
 	useToast,
-	Flex,
-	Heading,
-	Divider,
-	Text,
+	VStack,
 } from '@chakra-ui/react';
 import { crearProtocolo } from '../../api';
-import { useNavigate } from 'react-router-dom';
-import { jwtDecode } from 'jwt-decode';
 
 const academias = [
 	'Academia de Programación y Algoritmos',
@@ -30,17 +29,17 @@ const academias = [
 	'Trabajo Terminal y Estancia Profesional',
 ];
 
-const ProtocolFormPage = () => {
+const CreateProtocolModal = ({ isOpen, onClose, onSave }) => {
 	const [protocolData, setProtocolData] = useState({
 		titulo_protocolo: '',
 		academia: '',
+		lider_equipo: '',
 	});
 	const toast = useToast();
-	const navigate = useNavigate();
 
 	// Manejar cambios en los campos del formulario
 	const handleInputChange = (key, value) => {
-		setProtocolData({ ...protocolData, [key]: value });
+		setProtocolData((prev) => ({ ...prev, [key]: value }));
 	};
 
 	const handleSubmit = async () => {
@@ -59,13 +58,9 @@ const ProtocolFormPage = () => {
 				return;
 			}
 
-			// Decodificar el token para obtener la boleta del líder
-			const payload = jwtDecode(token);
-			const lider_equipo = payload.boleta || payload.clave_empleado;
-
 			// Preparar datos para enviar al backend
 			const dataToSend = {
-				lider_equipo,
+				lider_equipo: protocolData.lider_equipo,
 				titulo_protocolo: protocolData.titulo_protocolo,
 				academia: protocolData.academia,
 			};
@@ -82,8 +77,8 @@ const ProtocolFormPage = () => {
 					duration: 3000,
 					isClosable: true,
 				});
-
-				navigate('/student');
+				onClose();
+				if (onSave) onSave(); // Ejecutar la función de guardado si se proporciona
 			} else {
 				toast({
 					title: 'Error al crear protocolo',
@@ -106,90 +101,76 @@ const ProtocolFormPage = () => {
 	};
 
 	return (
-		<Box
-			bg="#EDF2F7"
-			minH="100vh"
-			p={8}
+		<Modal
+			isOpen={isOpen}
+			onClose={onClose}
+			size="lg"
 		>
-			<Flex
-				justify="center"
-				mb={6}
-			>
-				<Heading
-					fontSize="3xl"
-					color="#2B6CB0"
-				>
-					Crear Protocolo
-				</Heading>
-			</Flex>
-			<VStack
-				spacing={6}
-				align="stretch"
-				bg="white"
-				p={6}
-				borderRadius="md"
-				boxShadow="lg"
-			>
-				<Text
-					fontSize="xl"
-					fontWeight="bold"
-					color="#2B6CB0"
-				>
-					Información del Protocolo
-				</Text>
-				<Divider mb={4} />
+			<ModalOverlay />
+			<ModalContent>
+				<ModalHeader>Crear Protocolo</ModalHeader>
+				<ModalBody>
+					<VStack
+						spacing={4}
+						align="stretch"
+					>
+						<FormControl>
+							<FormLabel>Título del Protocolo</FormLabel>
+							<Input
+								placeholder="Ingrese el título del protocolo"
+								value={protocolData.titulo_protocolo}
+								onChange={(e) =>
+									handleInputChange('titulo_protocolo', e.target.value)
+								}
+								focusBorderColor="blue.500"
+							/>
+						</FormControl>
 
-				<FormControl>
-					<FormLabel
-						fontWeight="bold"
-						color="#2B6CB0"
-					>
-						Título del Protocolo
-					</FormLabel>
-					<Input
-						placeholder="Ingrese el título del protocolo"
-						value={protocolData.titulo_protocolo}
-						onChange={(e) =>
-							handleInputChange('titulo_protocolo', e.target.value)
-						}
-						focusBorderColor="#2B6CB0"
-					/>
-				</FormControl>
-
-				<FormControl>
-					<FormLabel
-						fontWeight="bold"
-						color="#2B6CB0"
-					>
-						Área/Academia
-					</FormLabel>
-					<Select
-						placeholder="Seleccione un área o academia"
-						value={protocolData.academia}
-						onChange={(e) => handleInputChange('academia', e.target.value)}
-						focusBorderColor="#2B6CB0"
-					>
-						{academias.map((academia, index) => (
-							<option
-								key={index}
-								value={academia}
+						<FormControl>
+							<FormLabel>Área/Academia</FormLabel>
+							<Select
+								placeholder="Seleccione el área o academia"
+								value={protocolData.academia}
+								onChange={(e) => handleInputChange('academia', e.target.value)}
+								focusBorderColor="blue.500"
 							>
-								{academia}
-							</option>
-						))}
-					</Select>
-				</FormControl>
+								{academias.map((academia, index) => (
+									<option
+										key={index}
+										value={academia}
+									>
+										{academia}
+									</option>
+								))}
+							</Select>
+						</FormControl>
 
-				<Button
-					colorScheme="green"
-					size="lg"
-					onClick={handleSubmit}
-				>
-					Crear Protocolo
-				</Button>
-			</VStack>
-		</Box>
+						<FormControl>
+							<FormLabel>Boleta de Líder</FormLabel>
+							<Input
+								placeholder="Ingrese la boleta del líder"
+								value={protocolData.lider_equipo}
+								onChange={(e) =>
+									handleInputChange('lider_equipo', e.target.value)
+								}
+								focusBorderColor="blue.500"
+							/>
+						</FormControl>
+					</VStack>
+				</ModalBody>
+				<ModalFooter>
+					<Button
+						colorScheme="blue"
+						mr={3}
+						onClick={handleSubmit}
+					>
+						Crear
+					</Button>
+					<Button onClick={onClose}>Cancelar</Button>
+				</ModalFooter>
+			</ModalContent>
+		</Modal>
 	);
 };
 
-export default ProtocolFormPage;
+export default CreateProtocolModal;

@@ -120,13 +120,13 @@ const Navbar = () => {
 				{/* Menú para ADMIN */}
 				{userRole === 'ADMIN' && (
 					<Flex display={{ base: 'none', md: 'flex' }}>
-						<Link
+						{/* <Link
 							href="/admin/dashboard"
 							mx={2}
 							fontWeight="bold"
 						>
 							Dashboard
-						</Link>
+						</Link> */}
 						<Link
 							href="/admin/users"
 							mx={2}
@@ -141,6 +141,27 @@ const Navbar = () => {
 						>
 							Equipos
 						</Link>
+						<Link
+							href="/admin/protocols"
+							mx={2}
+							fontWeight="bold"
+						>
+							Protocolos
+						</Link>
+						<Link
+							href="/admin/assign-judges"
+							mx={2}
+							fontWeight="bold"
+						>
+							Asignar Sinodales
+						</Link>
+						{/* <Link
+							href="/admin/evaluations"
+							mx={2}
+							fontWeight="bold"
+						>
+							Calificaciones
+						</Link> */}
 					</Flex>
 				)}
 
@@ -207,6 +228,13 @@ const Navbar = () => {
 									href="/admin/teams"
 								>
 									Equipos
+								</MenuItem>
+								<MenuItem
+									href="/admin/protocols"
+									mx={2}
+									fontWeight="bold"
+								>
+									Protocolos
 								</MenuItem>
 								<MenuItem
 									as="a"

@@ -111,19 +111,23 @@ const consultUsers = async (req = request, res = response) => {
 			}
 
 			query += `
-                UNION ALL
-                SELECT 'Docente' AS tipo, 
-                d.nombre AS nombre_usuario, 
-                d.correo AS correo_usuario, 
-                d.clave_empleado AS identificador, 
-                de.nombre_equipo AS equipo_asociado, 
-                dp.titulo AS protocolo_asociado, 
-                d.estado, 
-                DATE_FORMAT(d.fecha_registro, '%d/%m/%Y') AS fecha_registro
-            FROM Docentes d
-            LEFT JOIN Docente_Equipos de ON de.id_docente = d.id_docente AND de.estatus = 'A'
-            LEFT JOIN Docente_Protocolo dp ON dp.id_docente = d.id_docente AND dp.estatus = 'A'
-            WHERE 1=1
+              
+UNION ALL
+
+SELECT 'Docente' AS tipo, 
+       NULL AS id_equipo, -- Para emparejar la columna id_equipo
+       NULL AS id_protocolo, -- Para emparejar la columna id_protocolo
+       d.nombre AS nombre_usuario, 
+       d.correo AS correo_usuario, 
+       d.clave_empleado AS identificador, 
+       NULL AS equipo_asociado, -- Para emparejar la columna equipo_asociado
+       NULL AS protocolo_asociado, -- Para emparejar la columna protocolo_asociado
+       d.estado, 
+       DATE_FORMAT(d.fecha_registro, '%d/%m/%Y') AS fecha_registro
+FROM Docentes d
+LEFT JOIN Docente_Equipos de ON de.id_docente = d.id_docente AND de.estatus = 'A'
+LEFT JOIN Docente_Protocolo dp ON dp.id_docente = d.id_docente AND dp.estatus = 'A'
+WHERE 1=1;
             `;
 			if (rolSolicitado) {
 				query += ' AND d.rol = ?';

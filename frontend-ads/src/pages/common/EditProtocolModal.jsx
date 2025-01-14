@@ -90,6 +90,7 @@ const EditProtocolModal = ({ protocolData }) => {
 			<Button
 				colorScheme="yellow"
 				onClick={onOpen}
+				size="sm"
 			>
 				Editar Protocolo
 			</Button>

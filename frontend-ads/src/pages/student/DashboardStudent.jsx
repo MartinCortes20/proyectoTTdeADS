@@ -20,13 +20,13 @@ import {
 	useBreakpointValue,
 } from '@chakra-ui/react';
 import React, { useEffect, useState } from 'react';
-import EditProfileModal from './EditProfileModal';
-import DeleteProfileButton from './DeleteProfileButton';
-import DeleteTeamButton from './DeleteTeamButton';
-import EditTeamModal from './EditTeamModal';
-import UpdateProtocolModal from './UpdatePDFProtocolModal';
-import EditProtocolModal from './EditProtocolModal';
-import DeleteProtocolButton from './DeleteProtocolButton';
+import EditProfileModal from '../common/EditProfileModal';
+import DeleteProfileButton from '../common/DeleteProfileButton';
+import DeleteTeamButton from '../common/DeleteTeamButton';
+import EditTeamModal from '../common/EditTeamModal';
+import UpdateProtocolModal from '../common/UpdatePDFProtocolModal';
+import EditProtocolModal from '../common/EditProtocolModal';
+import DeleteProtocolButton from '../common/DeleteProtocolButton';
 import {
 	consultarEquipos,
 	consultarUsuarios,
@@ -332,7 +332,7 @@ const DashboardStudent = () => {
 									justify="space-between"
 								>
 									<EditProtocolModal protocolData={miProtocolo} />
-									<DeleteProtocolButton protocolData={miProtocolo} />
+									{/* <DeleteProtocolButton protocolData={miProtocolo} /> */}
 								</Flex>
 							</>
 						) : (

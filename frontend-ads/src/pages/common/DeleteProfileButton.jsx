@@ -10,16 +10,16 @@ import {
 	useDisclosure,
 } from '@chakra-ui/react';
 import { useRef } from 'react';
-import { eliminarProtocolo } from '../../api';
+import { eliminarUsuario } from '../../api';
 
-const DeleteProtocolButton = ({ protocolData }) => {
+const DeleteProfileButton = ({ userData }) => {
 	const { isOpen, onOpen, onClose } = useDisclosure();
 	const cancelRef = useRef();
 	const toast = useToast();
 
 	const handleDelete = async () => {
 		try {
-			// Obtener el token del almacenamiento
+			// Obtener el token desde localStorage
 			const token = localStorage.getItem('log-token');
 			if (!token) {
 				toast({
@@ -34,18 +34,29 @@ const DeleteProtocolButton = ({ protocolData }) => {
 			}
 
 			// Preparar los datos para la eliminación
-			const dataToSend = {
-				lider: protocolData.lider,
-				titulo_protocolo: protocolData.titulo,
-			};
+			const dataToSend = {};
+			if (userData?.boleta) {
+				dataToSend.boleta = userData.boleta;
+			} else if (userData?.clave_empleado) {
+				dataToSend.clave_empleado = userData.clave_empleado;
+			} else if (userData?.identificador) {
+				// Usar el identificador para asignar dinámicamente según el tipo de usuario
+				if (userData.tipo === 'Alumno') {
+					dataToSend.boleta = userData.identificador;
+				} else if (userData.tipo === 'Docente') {
+					dataToSend.clave_empleado = userData.identificador;
+				}
+			}
 
-			// Llamar a la API para eliminar el protocolo
-			const response = await eliminarProtocolo(token, dataToSend);
+			// Llamar a la API para eliminar el usuario
+			const response = await eliminarUsuario(token, dataToSend);
 
 			if (response.success) {
 				toast({
-					title: 'Protocolo eliminado.',
-					description: `El protocolo "${protocolData.titulo}" ha sido eliminado exitosamente.`,
+					title: 'Usuario eliminado.',
+					description: `El usuario ${
+						userData?.nombre || 'desconocido'
+					} ha sido eliminado exitosamente.`,
 					status: 'success',
 					duration: 5000,
 					isClosable: true,
@@ -56,7 +67,7 @@ const DeleteProtocolButton = ({ protocolData }) => {
 			} else {
 				toast({
 					title: 'Error al eliminar.',
-					description: response.message || 'No se pudo eliminar el protocolo.',
+					description: response.message || 'Ocurrió un error inesperado.',
 					status: 'error',
 					duration: 5000,
 					isClosable: true,
@@ -66,7 +77,7 @@ const DeleteProtocolButton = ({ protocolData }) => {
 		} catch (error) {
 			toast({
 				title: 'Error del servidor.',
-				description: 'No se pudo eliminar el protocolo.',
+				description: 'No se pudo eliminar al usuario.',
 				status: 'error',
 				duration: 5000,
 				isClosable: true,
@@ -80,8 +91,10 @@ const DeleteProtocolButton = ({ protocolData }) => {
 			<Button
 				colorScheme="red"
 				onClick={onOpen}
+				size="sm"
+				isDisabled={!userData} // Deshabilitar si no hay datos del usuario
 			>
-				Eliminar Protocolo
+				Eliminar Usuario
 			</Button>
 
 			<AlertDialog
@@ -95,13 +108,22 @@ const DeleteProtocolButton = ({ protocolData }) => {
 							fontSize="lg"
 							fontWeight="bold"
 						>
-							Eliminar Protocolo
+							Eliminar Usuario
 						</AlertDialogHeader>
 
 						<AlertDialogBody>
-							¿Estás seguro de que deseas eliminar el protocolo "
-							<strong>{protocolData.titulo}</strong>"? Esto eliminará el
-							protocolo permanentemente.
+							{userData ? (
+								<>
+									¿Estás seguro de que deseas eliminar al usuario{' '}
+									<strong>{userData.nombre_usuario || userData.nombre}</strong>?
+									Esta acción no se puede deshacer.
+								</>
+							) : (
+								<>
+									No se puede eliminar al usuario porque no se encontraron
+									datos.
+								</>
+							)}
 						</AlertDialogBody>
 
 						<AlertDialogFooter>
@@ -115,6 +137,7 @@ const DeleteProtocolButton = ({ protocolData }) => {
 								colorScheme="red"
 								onClick={handleDelete}
 								ml={3}
+								isDisabled={!userData} // Deshabilitar si no hay datos del usuario
 							>
 								Eliminar
 							</Button>
@@ -126,4 +149,4 @@ const DeleteProtocolButton = ({ protocolData }) => {
 	);
 };
 
-export default DeleteProtocolButton;
+export default DeleteProfileButton;
