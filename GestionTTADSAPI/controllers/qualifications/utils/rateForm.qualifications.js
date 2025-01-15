@@ -32,6 +32,7 @@ const rateForm = async (req = request, res = response) => {
 			recomendaciones_adicionales,
 		} = req.body;
 
+		console.log(req.body);
 		// Convertir a mayúsculas los campos relevantes
 		titulo_protocolo = titulo_protocolo?.toUpperCase();
 		titulo_corresponde_producto = titulo_corresponde_producto?.toUpperCase();

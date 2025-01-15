@@ -510,7 +510,7 @@ export const asignarSinodales = async (token, data) => {
 export const rateForm = async (token, data) => {
 	try {
 		const response = await axios.post(
-			`${BASE_URL}/protocolo/calificarProtocolo`,
+			`${BASE_URL}/protocolos/calificarProtocolo`,
 			data,
 			{
 				headers: { 'log-token': token },
