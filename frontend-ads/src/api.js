@@ -3,6 +3,8 @@ import { jwtDecode } from 'jwt-decode';
 
 const BASE_URL = 'http://localhost:8080/api/gestionTT';
 
+const PDF_URL = 'http://localhost:3000/';
+
 /**
  * Manejar errores en las solicitudes.
  * @param {Object} error - Objeto de error de Axios.
@@ -496,5 +498,27 @@ export const asignarSinodales = async (token, data) => {
 		return { success: true, data: response.data };
 	} catch (error) {
 		return handleRequestError(error, 'Error al asignar sinodales.');
+	}
+};
+
+/**
+ * Registrar una evaluación de protocolo.
+ * @param {string} token - Token de autenticación.
+ * @param {Object} data - Datos del formulario de evaluación.
+ * @returns {Promise<Object>} Respuesta del servidor.
+ */
+export const rateForm = async (token, data) => {
+	try {
+		const response = await axios.post(
+			`${BASE_URL}/protocolo/calificarProtocolo`,
+			data,
+			{
+				headers: { 'log-token': token },
+			}
+		);
+		console.log('Evaluación registrada:', response.data);
+		return { success: true, data: response.data };
+	} catch (error) {
+		return handleRequestError(error, 'Error al registrar la evaluación.');
 	}
 };

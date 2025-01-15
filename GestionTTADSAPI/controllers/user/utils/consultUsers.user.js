@@ -27,7 +27,7 @@ const consultUsers = async (req = request, res = response) => {
 		const puedeConsultarDocentes = permisos.includes('5');
 		const puedeConsultarTodos = permisos.includes('G');
 
-		console.log(permisos);
+		console.log('Permisos', permisos);
 		if (
 			!puedeConsultarAlumnos &&
 			!puedeConsultarDocentes &&
@@ -41,8 +41,9 @@ const consultUsers = async (req = request, res = response) => {
 		let query = '';
 		let queryParams = [];
 
-		console.log(puedeConsultarAlumnos);
-		console.log(puedeConsultarDocentes);
+		console.log('Consulta Alumnos', puedeConsultarAlumnos);
+		console.log('Consulta Docentes', puedeConsultarDocentes);
+		console.log('req', req.clave_empleado, req.boleta);
 
 		// Construir consulta según los permisos
 		if (puedeConsultarAlumnos && boleta) {
@@ -90,7 +91,7 @@ const consultUsers = async (req = request, res = response) => {
 
 			if (rolSolicitado) {
 				query += ' AND u.rol = ?';
-				console.log(rolSolicitado);
+				// console.log(rolSolicitado);
 				rolSolicitado = rolSolicitado.toUpperCase();
 				queryParams.push(rolSolicitado);
 			}

@@ -56,13 +56,16 @@ const Login = () => {
 				// Redirigir según el rol
 				switch (rol) {
 					case 'ADMIN':
-						navigate('/admin');
+						navigate('/admin/users');
 						break;
 					case 'DOCENTE':
 						navigate('/docente');
 						break;
 					case 'ESTUDIANTE':
 						navigate('/student');
+						break;
+					case 'SINODAL':
+						navigate('/sinodal/dashboard');
 						break;
 					default:
 						navigate('/');

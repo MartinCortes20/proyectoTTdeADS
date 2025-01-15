@@ -155,13 +155,6 @@ const Navbar = () => {
 						>
 							Asignar Sinodales
 						</Link>
-						{/* <Link
-							href="/admin/evaluations"
-							mx={2}
-							fontWeight="bold"
-						>
-							Calificaciones
-						</Link> */}
 					</Flex>
 				)}
 
@@ -197,6 +190,25 @@ const Navbar = () => {
 						)}
 					</Flex>
 				)}
+				{/* Menú para SINODAL */}
+				{userRole === 'SINODAL' && (
+					<Flex display={{ base: 'none', md: 'flex' }}>
+						<Link
+							href="/sinodal/dashboard"
+							mx={2}
+							fontWeight="bold"
+						>
+							Dashboard
+						</Link>
+						<Link
+							href="/sinodal/rate-form"
+							mx={2}
+							fontWeight="bold"
+						>
+							Calificar Protocolo
+						</Link>
+					</Flex>
+				)}
 
 				{/* Menú desplegable para pantallas pequeñas */}
 				<Menu>
@@ -211,12 +223,12 @@ const Navbar = () => {
 					<MenuList color="black">
 						{userRole === 'ADMIN' && (
 							<>
-								<MenuItem
+								{/* <MenuItem
 									as="a"
 									href="/admin/dashboard"
 								>
 									Dashboard
-								</MenuItem>
+								</MenuItem> */}
 								<MenuItem
 									as="a"
 									href="/admin/users"
@@ -242,12 +254,12 @@ const Navbar = () => {
 								>
 									Asignar Sinodales
 								</MenuItem>
-								<MenuItem
+								{/* <MenuItem
 									as="a"
 									href="/admin/evaluations"
 								>
 									Calificaciones
-								</MenuItem>
+								</MenuItem> */}
 							</>
 						)}
 						{userRole === 'ESTUDIANTE' && (
@@ -274,6 +286,22 @@ const Navbar = () => {
 										Crear Protocolo
 									</MenuItem>
 								)}
+							</>
+						)}
+						{userRole === 'SINODAL' && (
+							<>
+								<MenuItem
+									as="a"
+									href="/sinodal/dashboard"
+								>
+									Dashboard
+								</MenuItem>
+								<MenuItem
+									as="a"
+									href="/sinodal/rate-form"
+								>
+									Calificar Protocolo
+								</MenuItem>
 							</>
 						)}
 					</MenuList>

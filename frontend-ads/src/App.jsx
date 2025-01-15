@@ -5,12 +5,13 @@ import DashboardAdmin from './pages/admin/DashboardAdmin';
 import UsersPage from './pages/admin/UsersPage';
 import TeamsPage from './pages/admin/TeamsPage';
 import AssignJudgesPage from './pages/admin/AssignJudgesPage';
-import EvaluationsPage from './pages/admin/EvaluationsPage';
+import EvaluationsPage from './pages/sinodal/EvaluationsPage';
 import DashboardStudent from './pages/student/DashboardStudent';
 import TeamFormPage from './pages/student/CreateTeamFormPage';
 import AuthPage from './pages/AuthPage'; // Página que incluye login y register
 import ProtocolFormPage from './pages/student/CreateProtocolFormPage';
 import ProtocolsPage from './pages/admin/ProtocolsPage';
+import DashboardSinodal from './pages/sinodal/DashboardSinodal';
 
 const App = () => {
 	return (
@@ -68,6 +69,16 @@ const App = () => {
 								<Route
 									path="/student/create-protocol"
 									element={<ProtocolFormPage />}
+								/>
+
+								{/* Rutas para SINODAL	 */}
+								<Route
+									path="/sinodal/dashboard"
+									element={<DashboardSinodal />}
+								/>
+								<Route
+									path="/sinodal/rate-form"
+									element={<EvaluationsPage />}
 								/>
 							</Routes>
 						</>

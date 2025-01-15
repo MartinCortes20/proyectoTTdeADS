@@ -5,6 +5,9 @@ import {
 	FormLabel,
 	Select,
 	Button,
+	Text,
+	Heading,
+	VStack,
 	useToast,
 } from '@chakra-ui/react';
 import {
@@ -113,7 +116,11 @@ const AssignJudgesPage = () => {
 		}
 	};
 
-	console.log(selectedProtocol, selectedTeam);
+	const handleReset = () => {
+		setSelectedTeam('');
+		setSelectedProtocol('');
+	};
+
 	return (
 		<Box
 			p={8}
@@ -121,57 +128,95 @@ const AssignJudgesPage = () => {
 			minH="100vh"
 			display="flex"
 			flexDirection="column"
-			justifyContent="center"
 			alignItems="center"
+			justifyContent="center"
 		>
 			<Box
 				bg="white"
-				p={6}
+				p={8}
 				borderRadius="md"
 				boxShadow="lg"
+				w={{ base: '90%', md: '70%', lg: '60%' }}
+				minH="80vh"
+				display="flex"
+				flexDirection="column"
+				justifyContent="space-around"
 			>
-				<FormControl mb={4}>
-					<FormLabel>Seleccionar Equipo</FormLabel>
-					<Select
-						placeholder="Seleccione un equipo"
-						value={selectedTeam}
-						onChange={(e) => setSelectedTeam(e.target.value)}
-					>
-						{teams.map((team) => (
-							<option
-								key={team.id_equipo}
-								value={team.nombre_equipo}
-							>
-								{team.nombre_equipo}
-							</option>
-						))}
-					</Select>
-				</FormControl>
-
-				<FormControl mb={4}>
-					<FormLabel>Seleccionar Protocolo</FormLabel>
-					<Select
-						placeholder="Seleccione un protocolo"
-						value={selectedProtocol}
-						onChange={(e) => setSelectedProtocol(e.target.value)}
-					>
-						{protocols.map((protocol) => (
-							<option
-								key={protocol.id_protocolo}
-								value={protocol.titulo}
-							>
-								{protocol.titulo}
-							</option>
-						))}
-					</Select>
-				</FormControl>
-
-				<Button
-					colorScheme="blue"
-					onClick={handleAssign}
+				<VStack
+					spacing={6}
+					align="stretch"
 				>
-					Asignar Sinodales
-				</Button>
+					<Heading
+						as="h2"
+						size="lg"
+						textAlign="center"
+						color="teal.600"
+					>
+						Asignar Sinodales
+					</Heading>
+					<Text
+						textAlign="center"
+						color="gray.600"
+					>
+						Seleccione un equipo y un protocolo para asignar sinodales.
+					</Text>
+
+					<FormControl>
+						<FormLabel>Seleccionar Equipo</FormLabel>
+						<Select
+							placeholder="Seleccione un equipo"
+							value={selectedTeam}
+							onChange={(e) => setSelectedTeam(e.target.value)}
+							bg="gray.50"
+						>
+							{teams.map((team) => (
+								<option
+									key={team.id_equipo}
+									value={team.nombre_equipo}
+								>
+									{team.nombre_equipo}
+								</option>
+							))}
+						</Select>
+					</FormControl>
+
+					<FormControl>
+						<FormLabel>Seleccionar Protocolo</FormLabel>
+						<Select
+							placeholder="Seleccione un protocolo"
+							value={selectedProtocol}
+							onChange={(e) => setSelectedProtocol(e.target.value)}
+							bg="gray.50"
+						>
+							{protocols.map((protocol) => (
+								<option
+									key={protocol.id_protocolo}
+									value={protocol.titulo}
+								>
+									{protocol.titulo}
+								</option>
+							))}
+						</Select>
+					</FormControl>
+
+					<VStack spacing={4}>
+						<Button
+							colorScheme="blue"
+							onClick={handleAssign}
+							w="full"
+						>
+							Asignar Sinodales
+						</Button>
+						<Button
+							colorScheme="gray"
+							variant="outline"
+							onClick={handleReset}
+							w="full"
+						>
+							Reiniciar Selección
+						</Button>
+					</VStack>
+				</VStack>
 			</Box>
 		</Box>
 	);

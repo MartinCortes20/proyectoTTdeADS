@@ -26,7 +26,7 @@ import DeleteTeamButton from '../common/DeleteTeamButton';
 import EditTeamModal from '../common/EditTeamModal';
 import UpdateProtocolModal from '../common/UpdatePDFProtocolModal';
 import EditProtocolModal from '../common/EditProtocolModal';
-import DeleteProtocolButton from '../common/DeleteProtocolButton';
+// import DeleteProtocolButton from '../common/DeleteProtocolButton';
 import {
 	consultarEquipos,
 	consultarUsuarios,
@@ -312,10 +312,10 @@ const DashboardStudent = () => {
 								<Text mb={2}>{miProtocolo.academia}</Text>
 
 								<Text fontWeight="bold">Director:</Text>
-								<Text mb={2}>{miProtocolo.director}</Text>
+								<Text mb={2}>{miEquipo.director}</Text>
 
 								<Text fontWeight="bold">Director 2:</Text>
-								<Text mb={2}>{miProtocolo.director_2 || 'N/E'}</Text>
+								<Text mb={2}>{miEquipo.director_2 || 'N/E'}</Text>
 
 								<Text fontWeight="bold">PDF Subido:</Text>
 								<Text
