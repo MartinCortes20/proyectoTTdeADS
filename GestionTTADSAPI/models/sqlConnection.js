@@ -20,7 +20,6 @@ const getConnection = async () => {
 	try {
 		// Obtener una conexión desde el pool
 		const connection = await pool.getConnection();
-		console.log('Conexión exitosa a la base de datos');
 		return connection; // Devolver la conexión sin liberarla
 	} catch (error) {
 		console.error('Error al conectar con la base de datos:', error.message);

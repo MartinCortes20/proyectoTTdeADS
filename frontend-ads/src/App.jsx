@@ -10,7 +10,8 @@ import DashboardStudent from './pages/student/DashboardStudent';
 import TeamFormPage from './pages/student/CreateTeamFormPage';
 import AuthPage from './pages/AuthPage'; // Página que incluye login y register
 import ProtocolFormPage from './pages/student/CreateProtocolFormPage';
-
+import DashboardCatt from './pages/catt/DashboardCatt';
+import DashboardPresident from './pages/president/DashboardPresident'
 const App = () => {
 	return (
 		<Router>

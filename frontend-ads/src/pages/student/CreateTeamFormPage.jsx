@@ -15,7 +15,8 @@ import {
 } from '@chakra-ui/react';
 import { useNavigate } from 'react-router-dom';
 import { crearEquipo } from '../../api';
-
+import { useContext } from 'react';
+import { AuthContext } from '../../context/AuthContext';
 const TeamFormPage = () => {
 	const [teamData, setTeamData] = useState({
 		nombre_equipo: '',
@@ -28,7 +29,7 @@ const TeamFormPage = () => {
 	});
 	const toast = useToast();
 	const navigate = useNavigate();
-
+	const { token } = useContext(AuthContext);
 	const handleInputChange = (key, value) => {
 		setTeamData({ ...teamData, [key]: value });
 	};
@@ -58,7 +59,6 @@ const TeamFormPage = () => {
 
 	const handleSubmit = async () => {
 		try {
-			const token = localStorage.getItem('token');
 			const response = await crearEquipo(token, teamData);
 
 			if (response.success) {

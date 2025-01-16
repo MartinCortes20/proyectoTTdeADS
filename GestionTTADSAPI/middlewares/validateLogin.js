@@ -4,7 +4,6 @@ const { request, response } = require('express');
 const validarLogin = (req = request, res = response, next) => {
 	// Suponiendo que el token se envía en el encabezado 'log-token'
 	const token = req.header('log-token');
-	console.log('Valida con token:', token);
 	if (!token) {
 		return res.status(401).json({ message: 'Inicia sesion porfavor.' });
 	}

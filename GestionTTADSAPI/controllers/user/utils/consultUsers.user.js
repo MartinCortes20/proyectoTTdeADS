@@ -4,18 +4,16 @@ const { getConnection } = require('../../../models/sqlConnection');
 const consultUsers = async (req = request, res = response) => {
 	let { boleta, clave_empleado, correo, fecha, rolSolicitado, rol } = req.body; // Filtros de consulta
 	const { rol: userRole, correo: userCorreo } = req; // Rol y correo del usuario autenticado
-
+	
 	try {
-		console.log(userRole);
-
-		console.log(rolSolicitado);
 		// Verificar permisos del usuario autenticado
 		const pool = await getConnection();
 		const [rolePermissions] = await pool.execute(
-			'SELECT permisos FROM Permisos WHERE rol = ?',
-			[userRole]
+			'SELECT permisos FROM Permisos',
+			[rol]
 		);
-
+		console.log(rolePermissions);
+		
 		if (rolePermissions.length === 0) {
 			return res
 				.status(403)
@@ -27,7 +25,6 @@ const consultUsers = async (req = request, res = response) => {
 		const puedeConsultarDocentes = permisos.includes('5');
 		const puedeConsultarTodos = permisos.includes('G');
 
-		console.log(permisos);
 		if (
 			!puedeConsultarAlumnos &&
 			!puedeConsultarDocentes &&
@@ -43,9 +40,6 @@ const consultUsers = async (req = request, res = response) => {
 		let query = '';
 		let queryParams = [];
 
-		console.log(puedeConsultarAlumnos);
-		console.log(puedeConsultarDocentes);
-
 		// Construir consulta según los permisos
 		if (puedeConsultarAlumnos && boleta) {
 			console.log('Permiso 4 detectado. Consultando alumnos por boleta...');
@@ -57,19 +51,17 @@ const consultUsers = async (req = request, res = response) => {
                 WHERE a.boleta = ?
             `;
 			queryParams.push(boleta);
-		} else if (puedeConsultarDocentes && clave_empleado) {
+		} else if (puedeConsultarDocentes) {
 			console.log(
 				'Permiso 5 detectado. Consultando docentes por clave_empleado...'
 			);
 			query = `
-                SELECT 'Docente' AS tipo, d.clave_empleado, d.nombre, d.correo, de.nombre_equipo, dp.titulo AS nombre_protocolo, d.estado
+                SELECT 'Docente' AS tipo, d.id_docente, d.clave_empleado, d.nombre, d.correo, de.nombre_equipo, dp.titulo AS nombre_protocolo, d.estado
                 FROM Docentes d
                 LEFT JOIN Docente_Equipos de ON d.id_docente = de.id_docente
                 LEFT JOIN Equipos e ON de.id_equipo = e.id_equipo
                 LEFT JOIN Docente_Protocolo dp ON d.id_docente = dp.id_docente
-                WHERE d.clave_empleado = ?
             `;
-			queryParams.push(clave_empleado);
 		} else if (puedeConsultarTodos) {
 			console.log('Permiso G detectado. Consultando alumnos y docentes...');
 

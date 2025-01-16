@@ -118,8 +118,6 @@ const consultTeam = async (req = request, res = response) => {
 			queryParams.push(titulo_protocolo);
 		}
 
-		console.log('Consulta:', query);
-		console.log('Parámetros:', queryParams);
 
 		// **4️⃣ Ejecutar la consulta**
 		const [equipos] = await pool.execute(query, queryParams);

@@ -11,8 +11,9 @@ import {
 	Spinner,
 } from '@chakra-ui/react';
 import React, { useEffect, useState } from 'react';
-import { consultarUsuarios, consultarEquipos, consultarProtocolos, consultarCalificaciones } from '../../api';
-
+import { consultarUsuarios, consultarEquipos, consultarProtocolos, consultarCalificaciones, eliminarUsuario } from '../../api';
+import { useContext } from 'react';
+import { AuthContext } from '../../context/AuthContext';
 const DashboardPresidente = () => {
 	const [docentes, setDocentes] = useState([]);
 	const [equipos, setEquipos] = useState([]);
@@ -20,16 +21,16 @@ const DashboardPresidente = () => {
 	const [calificaciones, setCalificaciones] = useState([]);
 	const [isLoading, setIsLoading] = useState(true);
 	const [error, setError] = useState(null);
-
+	const { token } = useContext(AuthContext);
 	useEffect(() => {
 		const fetchData = async () => {
 			try {
 				// Llamadas a la API
 				const [docentesResp, equiposResp, protocolosResp, calificacionesResp] = await Promise.all([
-					consultarUsuarios({}, { rol: 'docente' }),
-					consultarEquipos({}),
-					consultarProtocolos({}),
-					consultarCalificaciones({}),
+					consultarUsuarios(token, { rol: 'PRESIDENTE ACADEMIA' }),
+					consultarEquipos(token),
+					consultarProtocolos(token),
+					consultarCalificaciones(token),
 				]);
 
 				setDocentes(docentesResp.data || []);
@@ -68,10 +69,10 @@ const DashboardPresidente = () => {
 	// Renderizar botones para docentes (actualizar, eliminar)
 	const renderDocenteActions = (docente) => (
 		<Flex mt={4} justify="space-between">
-			<Button colorScheme="blue" onClick={() => console.log(`Actualizar docente: ${docente.id_usuario}`)}>
+			<Button colorScheme="blue" onClick={() => console.log(`Actualizar docente: ${docente.id_docente}`)}>
 				Actualizar
 			</Button>
-			<Button colorScheme="red" onClick={() => console.log(`Eliminar docente: ${docente.id_usuario}`)}>
+			<Button colorScheme="red" onClick={() => eliminarUsuario(token, {clave_empleado: docente.clave_empleado})}>
 				Eliminar
 			</Button>
 		</Flex>

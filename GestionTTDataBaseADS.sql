@@ -56,7 +56,6 @@
         sinodal_3 VARCHAR(100) NOT NULL, -- Referencia a Usuarios (id_usuario) que es el sinodal
         academia VARCHAR(100),
         fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        estado VARCHAR(10) DEFAULT 'A', -- Nueva columna 'estado'
         fecha_eliminacion DATETIME NULL,
         usuario_eliminacion VARCHAR(255) NULL,
         estado VARCHAR(10) DEFAULT 'A'

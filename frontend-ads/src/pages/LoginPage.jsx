@@ -67,7 +67,7 @@ const Login = () => {
 					case 'CATT':
 						navigate('/catt');
 						break;	
-					case 'PRESIDENTE':
+					case 'PRESIDENTE ACADEMIA':
 						navigate('/president');
 						break;	
 					default:
