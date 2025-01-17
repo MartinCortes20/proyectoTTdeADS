@@ -12,10 +12,12 @@ import {
 	useDisclosure,
 	useToast,
 } from '@chakra-ui/react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
+import { AuthContext } from '../../context/AuthContext';
 
 const EditProfileModal = ({ userData }) => {
+	const { token } = useContext(AuthContext);
 	const { isOpen, onOpen, onClose } = useDisclosure();
 	const toast = useToast();
 
@@ -42,13 +44,15 @@ const EditProfileModal = ({ userData }) => {
 		};
 
 		try {
+			console.log(token);
+			
 			const response = await axios.post(
 				'http://localhost:8080/api/gestionTT/usuario/actualizarEstudiante',
 				dataToSend,
 				{
 					headers: {
 						'Content-Type': 'application/json',
-						'log-token': localStorage.getItem('token'),
+						'log-token': token,
 					},
 				}
 			);

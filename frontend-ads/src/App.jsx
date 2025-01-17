@@ -10,6 +10,7 @@ import DashboardStudent from './pages/student/DashboardStudent';
 import TeamFormPage from './pages/student/CreateTeamFormPage';
 import AuthPage from './pages/AuthPage'; // Página que incluye login y register
 import ProtocolFormPage from './pages/student/CreateProtocolFormPage';
+import ProtocolsPage from '../src/pages/ProtocolsPage'
 import DashboardCatt from './pages/catt/DashboardCatt';
 import DashboardPresident from './pages/president/DashboardPresident'
 const App = () => {
@@ -70,7 +71,13 @@ const App = () => {
 									path="/catt"
 									element={<DashboardCatt/>}
 								/>
-								
+
+								<Route
+									path="/catt/consultarUsuarios"
+									element={<DashboardCatt/>}
+								/>
+					
+							
 								{/* Rutas para PRESIDENTE */}
 								<Route
 									path="/president"

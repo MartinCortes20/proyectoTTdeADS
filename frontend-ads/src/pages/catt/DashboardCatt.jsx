@@ -1,204 +1,257 @@
+import React, { useEffect, useState, useContext } from "react";
 import {
-	Box,
-	Grid,
-	Card,
-	CardHeader,
-	CardBody,
-	Text,
-	Heading,
-	Flex,
-	Button,
-	Spinner,
-} from '@chakra-ui/react';
-import React, { useEffect, useState } from 'react';
-import EditProfileModal from './EditProfileModal';
-import DeleteProfileButton from './DeleteProfileButton';
-import EditTeamModal from './EditTeamModal';
-import DeleteTeamButton from './DeleteTeamButton';
-import EditProtocolModal from './EditProtocolModal';
-import DeleteProtocolButton from './DeleteProtocolButton';
-import { consultarEquipos, consultarUsuarios, consultarProtocolos, consultarCalificaciones } from '../../api';
+  Box,
+  Grid,
+  Card,
+  CardHeader,
+  CardBody,
+  Text,
+  Heading,
+  Flex,
+  Spinner,
+  IconButton,
+  useToast,
+} from "@chakra-ui/react";
+import { EditIcon, DeleteIcon } from "@chakra-ui/icons";
+import {
+  consultarUsuariosCATT,
+  consultarProfesCATT,
+  eliminarDocente,
+  eliminarAlumno,
+} from "../../api";
+import { AuthContext } from "../../context/AuthContext";
+import EditProfileModal from "../student/EditProfileModal";
 
 const DashboardCatt = () => {
-	const [alumnos, setAlumnos] = useState([]);
-	const [docentes, setDocentes] = useState([]);
-	const [equipos, setEquipos] = useState([]);
-	const [protocolos, setProtocolos] = useState([]);
-	const [calificaciones, setCalificaciones] = useState([]);
-	const [isLoading, setIsLoading] = useState(true);
-	const [error, setError] = useState(null);
+  const [usuarios, setUsuarios] = useState([]);
+  const [docentes, setDocentes] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [selectedUser, setSelectedUser] = useState(null); // Usuario o docente seleccionado
+  const [editType, setEditType] = useState(""); // Tipo de edición: 'usuario' o 'docente'
+  const { token } = useContext(AuthContext);
+  const toast = useToast();
 
-	useEffect(() => {
-		const fetchData = async () => {
-			try {
-				// Llamadas a la API
-				const [usuariosResp, docentesResp, equiposResp, protocolosResp, calificacionesResp] =
-					await Promise.all([
-						consultarUsuarios({}, { rol: 'alumno' }),
-						consultarUsuarios({}, { rol: 'docente' }),
-						consultarEquipos({}),
-						consultarProtocolos({}),
-						consultarCalificaciones({}),
-					]);
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!token) {
+        setError("No se encontró un token válido. Por favor, inicia sesión.");
+        setIsLoading(false);
+        return;
+      }
 
-				// Configurar los datos obtenidos
-				setAlumnos(usuariosResp.data || []);
-				setDocentes(docentesResp.data || []);
-				setEquipos(equiposResp.data || []);
-				setProtocolos(protocolosResp.data || []);
-				setCalificaciones(calificacionesResp.data || []);
-			} catch (err) {
-				console.error('Error al cargar los datos:', err);
-				setError('Hubo un error al cargar los datos.');
-			} finally {
-				setIsLoading(false);
-			}
-		};
+      try {
+        const [usuariosResp, docentesResp] = await Promise.all([
+          consultarUsuariosCATT(token),
+          consultarProfesCATT(token),
+        ]);
 
-		fetchData();
-	}, []);
+        if (usuariosResp.success) {
+          setUsuarios(usuariosResp.data);
+        } else {
+          toast({
+            title: "Error al cargar usuarios",
+            description: usuariosResp.message || "Intenta nuevamente más tarde.",
+            status: "error",
+            duration: 5000,
+            isClosable: true,
+          });
+        }
 
-	if (isLoading) {
-		return (
-			<Flex justify="center" align="center" height="100vh">
-				<Spinner size="xl" />
-			</Flex>
-		);
-	}
+        if (docentesResp.success) {
+          setDocentes(docentesResp.data);
+        } else {
+          toast({
+            title: "Error al cargar docentes",
+            description: docentesResp.message || "Intenta nuevamente más tarde.",
+            status: "error",
+            duration: 5000,
+            isClosable: true,
+          });
+        }
+      } catch (err) {
+        console.error("Error al cargar los datos:", err);
+        setError("Hubo un error al cargar los datos.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-	if (error) {
-		return (
-			<Flex justify="center" align="center" height="100vh">
-				<Text color="red.500" fontSize="lg">
-					{error}
-				</Text>
-			</Flex>
-		);
-	}
+    fetchData();
+  }, [token, toast]);
 
-	return (
-		<Box bg="#EDF2F7" minH="100vh" p={8}>
-			<Flex justify="center" mb={6}>
-				<Heading fontSize="3xl" color="#2B6CB0">
-					Panel de CATT
-				</Heading>
-			</Flex>
-			<Grid templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)' }} gap={6}>
-				{/* Alumnos */}
-				<Card boxShadow="lg" borderRadius="md">
-					<CardHeader bg="#2B6CB0" color="white" p={4} borderRadius="md">
-						Alumnos
-					</CardHeader>
-					<CardBody p={4}>
-						{alumnos.length > 0 ? (
-							alumnos.map((alumno) => (
-								<Box key={alumno.id_usuario} mb={4}>
-									<Text fontWeight="bold">Nombre:</Text>
-									<Text>{alumno.nombre}</Text>
-									<Flex mt={4} justify="space-between">
-										<EditProfileModal userData={alumno} />
-										<DeleteProfileButton userId={alumno.id_usuario} />
-									</Flex>
-								</Box>
-							))
-						) : (
-							<Text>No hay alumnos registrados.</Text>
-						)}
-					</CardBody>
-				</Card>
+  const handleEditUser = (user, type) => {
+    setSelectedUser(user); // Establecer usuario o docente seleccionado
+    setEditType(type); // Definir si es un usuario o docente
+  };
 
-				{/* Docentes */}
-				<Card boxShadow="lg" borderRadius="md">
-					<CardHeader bg="#2B6CB0" color="white" p={4} borderRadius="md">
-						Docentes
-					</CardHeader>
-					<CardBody p={4}>
-						{docentes.length > 0 ? (
-							docentes.map((docente) => (
-								<Box key={docente.id_usuario} mb={4}>
-									<Text fontWeight="bold">Nombre:</Text>
-									<Text>{docente.nombre}</Text>
-									<Flex mt={4} justify="space-between">
-										<EditProfileModal userData={docente} />
-										<DeleteProfileButton userId={docente.id_usuario} />
-									</Flex>
-								</Box>
-							))
-						) : (
-							<Text>No hay docentes registrados.</Text>
-						)}
-					</CardBody>
-				</Card>
+  const handleEliminarUsuario = async (id) => {
+    try {
+      const response = await eliminarAlumno(token, { id });
+      if (response.success) {
+        toast({
+          title: "Usuario eliminado",
+          description: "El usuario fue eliminado exitosamente.",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
+        setUsuarios(usuarios.filter((usuario) => usuario.boleta !== id));
+      } else {
+        throw new Error(response.message);
+      }
+    } catch (error) {
+      toast({
+        title: "Error al eliminar usuario",
+        description: error.message || "Intenta nuevamente.",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+    }
+  };
 
-				{/* Equipos */}
-				<Card boxShadow="lg" borderRadius="md">
-					<CardHeader bg="#2B6CB0" color="white" p={4} borderRadius="md">
-						Equipos
-					</CardHeader>
-					<CardBody p={4}>
-						{equipos.length > 0 ? (
-							equipos.map((equipo) => (
-								<Box key={equipo.id_equipo} mb={4}>
-									<Text fontWeight="bold">Nombre del Equipo:</Text>
-									<Text>{equipo.nombre_equipo}</Text>
-									<Flex mt={4} justify="space-between">
-										<EditTeamModal teamData={equipo} />
-										<DeleteTeamButton teamId={equipo.id_equipo} />
-									</Flex>
-								</Box>
-							))
-						) : (
-							<Text>No hay equipos registrados.</Text>
-						)}
-					</CardBody>
-				</Card>
+  const handleEliminarDocente = async (claveEmpleado) => {
+    try {
+      const response = await eliminarDocente(token, claveEmpleado);
+      if (response.success) {
+        toast({
+          title: "Docente eliminado",
+          description: "El docente fue eliminado exitosamente.",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
+        setDocentes(
+          docentes.filter(
+            (docente) => docente.clave_empleado !== claveEmpleado
+          )
+        );
+      } else {
+        throw new Error(response.message);
+      }
+    } catch (error) {
+      toast({
+        title: "Error al eliminar docente",
+        description: error.message || "Intenta nuevamente.",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+    }
+  };
 
-				{/* Protocolos */}
-				<Card boxShadow="lg" borderRadius="md">
-					<CardHeader bg="#2B6CB0" color="white" p={4} borderRadius="md">
-						Protocolos
-					</CardHeader>
-					<CardBody p={4}>
-						{protocolos.length > 0 ? (
-							protocolos.map((protocolo) => (
-								<Box key={protocolo.id_protocolo} mb={4}>
-									<Text fontWeight="bold">Título:</Text>
-									<Text>{protocolo.titulo}</Text>
-									<Flex mt={4} justify="space-between">
-										<EditProtocolModal protocolData={protocolo} />
-										<DeleteProtocolButton protocolId={protocolo.id_protocolo} />
-									</Flex>
-								</Box>
-							))
-						) : (
-							<Text>No hay protocolos registrados.</Text>
-						)}
-					</CardBody>
-				</Card>
+  if (isLoading) {
+    return (
+      <Flex justify="center" align="center" height="100vh">
+        <Spinner size="xl" />
+      </Flex>
+    );
+  }
 
-				{/* Calificaciones */}
-				<Card boxShadow="lg" borderRadius="md">
-					<CardHeader bg="#2B6CB0" color="white" p={4} borderRadius="md">
-						Calificaciones
-					</CardHeader>
-					<CardBody p={4}>
-						{calificaciones.length > 0 ? (
-							calificaciones.map((calificacion) => (
-								<Box key={calificacion.id_calificacion} mb={4}>
-									<Text fontWeight="bold">Protocolo:</Text>
-									<Text>{calificacion.protocolo}</Text>
-									<Text fontWeight="bold">Calificación:</Text>
-									<Text>{calificacion.calificacion}</Text>
-								</Box>
-							))
-						) : (
-							<Text>No hay calificaciones disponibles.</Text>
-						)}
-					</CardBody>
-				</Card>
-			</Grid>
-		</Box>
-	);
+  if (error) {
+    return (
+      <Flex justify="center" align="center" height="100vh">
+        <Text color="red.500" fontSize="lg">
+          {error}
+        </Text>
+      </Flex>
+    );
+  }
+
+  return (
+    <Box bg="#EDF2F7" minH="100vh" p={8}>
+      <Flex justify="center" mb={6}>
+        <Heading fontSize="3xl" color="#2B6CB0">
+          Panel de CATT
+        </Heading>
+      </Flex>
+      <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }} gap={6}>
+        {/* Usuarios */}
+        <Card boxShadow="lg" borderRadius="md">
+          <CardHeader bg="#2B6CB0" color="white" p={4} borderRadius="md">
+            Usuarios
+          </CardHeader>
+          <CardBody p={4}>
+            {usuarios.length > 0 ? (
+              usuarios.map((usuario) => (
+                <Box key={usuario.boleta} mb={4}>
+                  <Text fontWeight="bold">Nombre:</Text>
+                  <Text>{usuario.nombre_alumno}</Text>
+                  <Text fontWeight="bold">Boleta:</Text>
+                  <Text>{usuario.boleta}</Text>
+                  <Text fontWeight="bold">Correo:</Text>
+                  <Text>{usuario.correo}</Text>
+                  <Flex mt={2} justify="flex-end">
+                    <IconButton
+                      icon={<EditIcon />}
+                      mr={2}
+                      colorScheme="blue"
+                      onClick={() => handleEditUser(usuario, "usuario")}
+                      aria-label="Editar usuario"
+                    />
+                    <IconButton
+                      icon={<DeleteIcon />}
+                      colorScheme="red"
+                      onClick={() => handleEliminarUsuario(usuario.boleta)}
+                      aria-label="Eliminar usuario"
+                    />
+                  </Flex>
+                </Box>
+              ))
+            ) : (
+              <Text>No hay usuarios registrados.</Text>
+            )}
+          </CardBody>
+        </Card>
+
+        {/* Docentes */}
+        <Card boxShadow="lg" borderRadius="md">
+          <CardHeader bg="#2B6CB0" color="white" p={4} borderRadius="md">
+            Docentes
+          </CardHeader>
+          <CardBody p={4}>
+            {docentes.length > 0 ? (
+              docentes.map((docente) => (
+                <Box key={docente.clave_empleado} mb={4}>
+                  <Text fontWeight="bold">Nombre:</Text>
+                  <Text>{docente.nombre_profe}</Text>
+                  <Text fontWeight="bold">Correo:</Text>
+                  <Text>{docente.correo}</Text>
+                  <Text fontWeight="bold">Clave:</Text>
+                  <Text>{docente.clave_empleado}</Text>
+                  <Flex mt={2} justify="flex-end">
+                    <IconButton
+                      icon={<EditIcon />}
+                      mr={2}
+                      colorScheme="blue"
+                      onClick={() => handleEditUser(docente, "docente")}
+                      aria-label="Editar docente"
+                    />
+                    <IconButton
+                      icon={<DeleteIcon />}
+                      colorScheme="red"
+                      onClick={() => handleEliminarDocente(docente.clave_empleado)}
+                      aria-label="Eliminar docente"
+                    />
+                  </Flex>
+                </Box>
+              ))
+            ) : (
+              <Text>No hay docentes registrados.</Text>
+            )}
+          </CardBody>
+        </Card>
+      </Grid>
+      {/* Modal para editar perfil */}
+      {selectedUser && (
+        <EditProfileModal
+          userData={selectedUser}
+          editType={editType} // Pasar tipo de edición
+        />
+      )}
+    </Box>
+  );
 };
 
 export default DashboardCatt;

@@ -110,20 +110,25 @@ export const cerrarSesion = async () => {
 
 export const consultarUsuarios = async (token, filtros = {}) => {
 	try {
-		const response = await axios.post(
-			`${BASE_URL}/usuario/consultarUsuarios`,
-			filtros,
-			{
-				headers: { 'log-token': token },
-			}
-		);
-		console.log('Usuarios encontrados:', response.data);
-		return { success: true, data: response.data.usuarios };
+	  const response = await axios.post(
+		`${BASE_URL}/usuario/consultarUsuarios`,
+		filtros,
+		{ headers: { 'log-token': token } }
+	  );
+	  console.log('Respuesta de consultarUsuarios:', response.data);
+	  return { success: true, data: response.data.usuarios };
 	} catch (error) {
-		return handleRequestError(error, 'Error al consultar usuarios.');
+	  console.error('Error en consultarUsuarios:', error.message);
+	  return handleRequestError(error, 'Error al consultar usuarios.');
 	}
-};
-
+  };
+  
+/**
+ * Actualizar un estudiante.
+ * @param {string} token - Token de autenticación.
+ * @param {Object} data - Datos del estudiante a actualizar.
+ * @returns {Promise<Object>} Respuesta del servidor.
+ */
 export const actualizarEstudiante = async (token, data) => {
 	try {
 		const response = await axios.post(
@@ -257,6 +262,13 @@ export const crearProtocolo = async (token, data) => {
 	}
 };
 
+
+/**
+ * Actualizar un protocolo.
+ * @param {string} token - Token de autenticación.
+ * @param {Object} data - Datos del protocolo a actualizar.
+ * @returns {Promise<Object>} Respuesta del servidor.
+ */
 export const actualizarProtocolo = async (token, data) => {
 	try {
 		const response = await axios.post(
@@ -316,5 +328,87 @@ export const asignarSinodales = async (token, data) => {
 		return { success: true, data: response.data };
 	} catch (error) {
 		return handleRequestError(error, 'Error al asignar sinodales.');
+	}
+};
+
+export const consultarUsuariosCATT = async (token) => {
+	    try {
+		const data = null;
+		const response = await axios.post(
+			`${BASE_URL}/catt/consultarUsuarios`,
+			data,
+			{
+				headers: { 'log-token': token },
+			}
+		);
+
+        if (response.status === 200 && response.data.success) {
+            return { success: true, data: response.data.usuarios };
+        } else {
+            console.warn('Respuesta inesperada al consultar usuarios:', response.data);
+            return { success: false, data: [], error: response.data.message || 'Respuesta inesperada del servidor.' };
+        }
+    } catch (error) {
+        console.error('Error en consultarUsuariosCATT:', error.response?.data || error.message);
+        return { success: false, error: error.response?.data?.message || error.message };
+    }
+};
+
+
+export const consultarProfesCATT = async (token) => {
+	try {
+	const data = null;
+	const response = await axios.post(
+		`${BASE_URL}/catt/consultarDocentes`,
+		data,
+		{
+			headers: { 'log-token': token },
+		}
+	);
+	console.log(response.data.usuarios)
+
+	if (response.status === 200 && response.data.success) {
+		return { success: true, data: response.data.usuarios };
+	} else {
+		console.warn('Respuesta inesperada al consultar usuarios:', response.data);
+		return { success: false, data: [], error: response.data.message || 'Respuesta inesperada del servidor.' };
+	}
+} catch (error) {
+	console.error('Error en consultarUsuariosCATT:', error.response?.data || error.message);
+	return { success: false, error: error.response?.data?.message || error.message };
+}
+};
+
+
+export const eliminarDocente = async (token, data) => {
+	try {
+		const response = await axios.post(
+			`${BASE_URL}/catt/eliminarDocente`,
+			data,
+			{
+				headers: { 'log-token': token },
+			}
+		);
+		return { success: true, data: response.data };
+	} catch (error) {
+		return handleRequestError(error, 'Error al eliminar docente.');
+	}
+};
+
+
+export const eliminarAlumno = async (token, data) => {
+	try {
+		console.log(data);
+		
+		const response = await axios.post(
+			`${BASE_URL}/catt/eliminarAlumno`,
+			data,
+			{
+				headers: { 'log-token': token },
+			}
+		);
+		return { success: true, data: response.data };
+	} catch (error) {
+		return handleRequestError(error, 'Error al eliminar usuario.');
 	}
 };
